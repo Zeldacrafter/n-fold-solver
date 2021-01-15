@@ -1,3 +1,3 @@
 #!/bin/bash
-cmake -Wno-deprecated -G "Ninja" -S . -B build
+cmake -Wno-deprecated -GNinja -B build .
 ninja -C build

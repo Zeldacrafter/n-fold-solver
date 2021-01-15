@@ -16,15 +16,11 @@ jobs:
     - name: Install Ninja
       run: sudo apt-get install ninja-build
 
-    - name: Configure CMake
-      run: cmake -Wno-deprecated -G "Ninja" -S $GITHUB_WORKSPACE -B ${{runner.workspace}}/build
-
     - name: Build
-      working-directory: ${{runner.workspace}}/build
-      run: ninja
+      run: bash build.sh
 
     - name: Test
-      working-directory: ${{runner.workspace}}/build
+      working-directory: ${{runner.workspace}}/n-fold-solver/build
       run: GTEST_OUTPUT=xml:test-results/ GTEST_COLOR=1 ctest -V
 
     - name: Upload test results
@@ -32,4 +28,4 @@ jobs:
       if: failure()
       with:
         name: test_results_xml
-        path: ${{runner.workspace}}/build/test-results/**/*.xml
+        path: ${{runner.workspace}}/n-fold-solver/build/test-results/**/*.xml
