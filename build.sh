@@ -1,18 +1,34 @@
 #!/bin/bash
 
+: '
 # No arguments provided. Build everything.
 if [ $# -eq 0 ] ; then
     enable_src=true
     enable_test=true
     enable_bench=true
 fi
+'
+if [ $# -eq 0 ] ; then
+    echo "No arguments provided."
+    echo "Possible:"
+    echo "   --src"
+    echo "   --test"
+    echo "   --bench"
+    echo "   --clean"
+    echo "   --debug"
+    exit -1
+fi
 
 # Handle command line arguments
 while test $# -gt 0
 do
     case "$1" in
-        --clean) rm -rf build nFold_* ;;
-        -c)      rm -rf build nFold_* ;;
+        --clean) echo "Cleaning"
+                 rm -rf nFold_*
+                 rm -rf build      ;;
+        -c)      echo "Cleaning"
+                 rm -rf nFold_*
+                 rm -rf build      ;;
         --src)   enable_src=true   ;;
         -s)      enable_src=true   ;;
         --test)  enable_test=true  ;;
@@ -38,6 +54,11 @@ if [ "$enable_bench" = true ] ; then
 fi
 if [ "$enable_debug" = true ] ; then
     args="${args} -DMY_DEBUG=ON"
+fi
+
+if [ -z "$args" ] ; then
+    echo "No module to build provided"
+    exit 1
 fi
 
 # Build with cmake and ninja
