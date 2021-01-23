@@ -1,12 +1,11 @@
-# Required by FetchContent_MakeAvailable
 cmake_minimum_required(VERSION 3.14)
 project(nFold)
-
-set(MY_DEBUG True)
 
 ############################
 # Configure Compilation
 ############################
+
+OPTION(MY_DEBUG OFF)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
@@ -14,35 +13,27 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 add_compile_options(-Wall -Wextra -pedantic)
 if (MY_DEBUG)
     add_compile_options(-g -fsanitize=address -fsanitize=undefined)
+    add_link_options(-fsanitize=address -fsanitize=undefined) # Pass -g too?
 else()
-    add_compile_options(-02)
+    add_compile_options(-O2)
 endif()
 
 ############################
-# External Dependencies
+# Choose what to build
 ############################
 
-include(FetchContent)
+OPTION(BUILD_SRC OFF)
+OPTION(BUILD_TEST OFF)
+OPTION(BUILD_BENCH OFF)
 
-# GTest
-FetchContent_Declare(
-  googletest
-  GIT_REPOSITORY https://github.com/google/googletest.git
-  GIT_TAG        release-1.10.0
-)
-FetchContent_MakeAvailable(googletest)
-include(GoogleTest)
-enable_testing()
-
-############################
-# Configure Tests
-############################
-
-set(TEST_NAME ${PROJECT_NAME}_tests)
-add_executable(${TEST_NAME} test/example_test.cc)
-target_link_libraries(${TEST_NAME} gtest_main)
-if (MY_DEBUG)
-    target_link_libraries(${TEST_NAME} -fsanitize=address -fsanitize=undefined)
+if (BUILD_SRC)
+    add_subdirectory("src")
 endif()
-gtest_discover_tests(${TEST_NAME})
 
+if (BUILD_TEST)
+    add_subdirectory("test")
+endif()
+
+if (BUILD_BENCH)
+    add_subdirectory("bench")
+endif()
