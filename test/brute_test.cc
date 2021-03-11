@@ -5,23 +5,22 @@
 
 class BruteForceFixture : public ::testing::TestWithParam<string> {
 protected:
-    string path;
+    int bruteForceOutput;
+    int wantedOutput;
 
     BruteForceFixture() {
-        path = GetParam();
+        string path = GetParam();
+
+        ifstream inputFile(path + ".in");
+        bruteForceOutput = bruteForce(inputFile);
+
+        ifstream outputFile(path + ".out");
+        outputFile >> wantedOutput;
     }
 };
 
 TEST_P(BruteForceFixture, BruteForceTest) {
-    string path = GetParam();
-
-    ifstream outputFile(path + ".out");
-    int solution;
-    outputFile >> solution;
-    cout << "For path " << path << ".out: " << solution << endl;
-
-    ifstream inputFile(path + ".in");
-    ASSERT_EQ(solution, bruteForce(inputFile));
+    ASSERT_EQ(wantedOutput, bruteForceOutput);
 }
 
 INSTANTIATE_TEST_CASE_P(

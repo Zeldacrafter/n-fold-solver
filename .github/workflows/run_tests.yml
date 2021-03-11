@@ -21,10 +21,6 @@ jobs:
 
     - name: Build
       run: bash build.sh -t
-      
-    - name: Test
-      working-directory: ${{runner.workspace}}/n-fold-solver
-      run: ./nFold_tests
 
     - name: Test
       working-directory: ${{runner.workspace}}/n-fold-solver

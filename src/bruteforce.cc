@@ -21,7 +21,6 @@ void readMatr(mat& m, istream& inp) {
 }
 
 int bruteForce(istream& inp) {
-
     int n, r, s, t; 
     inp >> n >> r >> s >> t;
 
@@ -41,7 +40,6 @@ int bruteForce(istream& inp) {
                 A(r + i * s + rr, i * t + cc) = bs[i](rr, cc);
     }
 
-    cout << A << endl;
     int best = numeric_limits<int>::min();
 
     vec x = l;

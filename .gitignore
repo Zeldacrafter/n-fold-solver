@@ -31,5 +31,5 @@ build
 
 # Executables
 *.exe
-*.out
+a.out
 *.app
