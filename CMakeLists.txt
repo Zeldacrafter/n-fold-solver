@@ -6,6 +6,7 @@ project(nFold)
 ############################
 
 OPTION(MY_DEBUG OFF)
+OPTION(MY_LOCAL OFF)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
@@ -16,7 +17,14 @@ if (MY_DEBUG)
     add_link_options(-fsanitize=address -fsanitize=undefined) # Pass -g too?
 else()
     add_compile_options(-O2)
-endif()
+endif(MY_DEBUG)
+
+if (MY_LOCAL)
+    add_compile_options(-I /usr/include/eigen3)
+endif(MY_LOCAL)
+
+unset(MY_DEBUG CACHE)
+unset(MY_LOCAL CACHE)
 
 ############################
 # Choose what to build

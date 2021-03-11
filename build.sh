@@ -23,20 +23,22 @@ fi
 while test $# -gt 0
 do
     case "$1" in
-        --clean) echo "Cleaning"
-                 rm -rf nFold_*
-                 rm -rf build      ;;
-        -c)      echo "Cleaning"
-                 rm -rf nFold_*
-                 rm -rf build      ;;
-        --src)   enable_src=true   ;;
-        -s)      enable_src=true   ;;
-        --test)  enable_test=true  ;;
-        -t)      enable_test=true  ;;
-        --bench) enable_bench=true ;;
-        -b)      enable_bench=true ;;
-        --debug) enable_debug=true ;;
-        -d)      enable_debug=true ;;
+        --clean)  echo "Cleaning"
+                  rm -rf nFold_*
+                  rm -rf build       ;;
+        -c)       echo "Cleaning"
+                  rm -rf nFold_*
+                  rm -rf build       ;;
+        --src)    enable_src=true    ;;
+        -s)       enable_src=true    ;;
+        --test)   enable_test=true   ;;
+        -t)       enable_test=true   ;;
+        --bench)  enable_bench=true  ;;
+        -b)       enable_bench=true  ;;
+        --debug)  enable_debug=true  ;;
+        -d)       enable_debug=true  ;;
+        --remote) enable_remote=true ;;
+        -r)       enable_remote=true ;;
     esac
     shift
 done
@@ -54,6 +56,9 @@ if [ "$enable_bench" = true ] ; then
 fi
 if [ "$enable_debug" = true ] ; then
     args="${args} -DMY_DEBUG=ON"
+fi
+if [ -z "$enable_remote" ] ; then
+    args="${args} -DMY_LOCAL=ON"
 fi
 
 if [ -z "$args" ] ; then
