@@ -8,10 +8,10 @@
 int bruteForce(const NFold<int>& nfold) {
     int best = std::numeric_limits<int>::min();
 
-    NFold<int>::Vec x = nfold.l;
+    Vec<int> x = nfold.l;
     bool ok = true;
     while (ok) {
-        if (nfold.A * x == nfold.b)
+        if (nfold * x == nfold.b)
             ckmax(best, x.dot(nfold.c));
         F0R (i, nfold.n * nfold.t + 1) {
             if (i == nfold.n * nfold.t) {

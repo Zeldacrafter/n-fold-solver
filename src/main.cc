@@ -1,4 +1,3 @@
-#include <bits/stdc++.h>
 #include <Eigen/Dense>
 
 #include "template.hh"
@@ -10,6 +9,8 @@ int main() {
 
     NFold<int> nfold(n, r, s, t);
     std::cin >> nfold;
+
+    std::cout << nfold;
 
     std::cout << bruteForce(nfold) << std::endl;
     return 0;
