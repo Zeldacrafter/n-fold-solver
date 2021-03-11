@@ -12,7 +12,11 @@ protected:
         std::string path = GetParam();
 
         std::ifstream inputFile(path + ".in");
-        bruteForceOutput = bruteForce(inputFile);
+        int n, r, s, t;
+        inputFile >> n >> r >> s >> t;
+        NFold<int> nFold(n, r, s, t);
+        inputFile >> nFold;
+        bruteForceOutput = bruteForce(nFold);
 
         std::ifstream outputFile(path + ".out");
         outputFile >> wantedOutput;

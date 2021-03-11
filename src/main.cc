@@ -4,9 +4,13 @@
 #include "template.hh"
 #include "bruteforce.cc"
 
-
 int main() {
-    NFold<int> nfold(std::cin);
+    int n, r, s, t;
+    std::cin >> n >> r >> s >> t;
+
+    NFold<int> nfold(n, r, s, t);
+    std::cin >> nfold;
+
     std::cout << bruteForce(nfold) << std::endl;
     return 0;
 }
