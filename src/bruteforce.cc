@@ -3,58 +3,23 @@
 #include <iostream>
 
 #include "template.hh"
+#include "nFold.cc"
 
-using namespace Eigen;
-
-using vec = VectorXi;
-using mat = MatrixXi;
-
-void readvec(vec& v, std::istream& inp) {
-    F0R (i, SZ(v)) inp >> v(i);
-}
-
-void readMatr(mat& m, std::istream& inp) {
-    F0R (r, m.rows()) {
-        F0R (c, m.cols()) {
-            inp >> m(r, c);
-        }
-    }
-}
-
-int bruteForce(std::istream& inp) {
-    int n, r, s, t; 
-    inp >> n >> r >> s >> t;
-
-    vec l(n * t), u(n * t), b(r + n * s), c(n * t);
-    readvec(l, inp); readvec(u, inp); readvec(b, inp); readvec(c, inp);
-    std::vector<mat> as(n, mat(r, t)), bs(n, mat(s, t));
-    for (auto& m : as) readMatr(m, inp);
-    for (auto& m : bs) readMatr(m, inp);
-
-    mat A(r + n * s, t * n);
-    F0R (i, n) {
-        F0R (rr, r)
-            F0R (cc, t)
-                A(rr, i * t + cc) = as[i](rr, cc);
-        F0R (rr, s)
-            F0R (cc, t)
-                A(r + i * s + rr, i * t + cc) = bs[i](rr, cc);
-    }
-
+int bruteForce(const NFold<int>& nfold) {
     int best = std::numeric_limits<int>::min();
 
-    vec x = l;
+    NFold<int>::Vec x = nfold.l;
     bool ok = true;
     while (ok) {
-        if (A * x == b)
-            ckmax(best, c.dot(x));
-        F0R (i, n * t + 1) {
-            if (i == n * t) {
+        if (nfold.A * x == nfold.b)
+            ckmax(best, x.dot(nfold.c));
+        F0R (i, nfold.n * nfold.t + 1) {
+            if (i == nfold.n * nfold.t) {
                 ok = false;
                 break;
             }
-            if (++x(i) > u(i)) {
-                x(i) = l(i);
+            if (++x(i) > nfold.u(i)) {
+                x(i) = nfold.l(i);
             } else {
                 break;
             }

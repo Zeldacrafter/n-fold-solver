@@ -1,14 +1,12 @@
 #include <bits/stdc++.h>
 #include <Eigen/Dense>
 
+#include "template.hh"
 #include "bruteforce.cc"
 
-template<typename T>
-using mat = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>
 
 int main() {
-    std::ifstream inp("input/max-small.in");
-    int content;
-    cout << "Solution: " << bruteForce(inp) << endl;
+    NFold<int> nfold(std::cin);
+    std::cout << bruteForce(nfold) << std::endl;
     return 0;
 }
