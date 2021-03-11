@@ -1,18 +1,19 @@
 #include <bits/stdc++.h>
 #include <Eigen/Dense>
+#include <iostream>
 
-#include "template.cc"
+#include "template.hh"
 
 using namespace Eigen;
 
 using vec = VectorXi;
 using mat = MatrixXi;
 
-void readVec(vec& v, istream& inp) {
+void readvec(vec& v, std::istream& inp) {
     F0R (i, SZ(v)) inp >> v(i);
 }
 
-void readMatr(mat& m, istream& inp) {
+void readMatr(mat& m, std::istream& inp) {
     F0R (r, m.rows()) {
         F0R (c, m.cols()) {
             inp >> m(r, c);
@@ -20,13 +21,13 @@ void readMatr(mat& m, istream& inp) {
     }
 }
 
-int bruteForce(istream& inp) {
+int bruteForce(std::istream& inp) {
     int n, r, s, t; 
     inp >> n >> r >> s >> t;
 
     vec l(n * t), u(n * t), b(r + n * s), c(n * t);
-    readVec(l, inp); readVec(u, inp); readVec(b, inp); readVec(c, inp);
-    vector<mat> as(n, mat(r, t)), bs(n, mat(s, t));
+    readvec(l, inp); readvec(u, inp); readvec(b, inp); readvec(c, inp);
+    std::vector<mat> as(n, mat(r, t)), bs(n, mat(s, t));
     for (auto& m : as) readMatr(m, inp);
     for (auto& m : bs) readMatr(m, inp);
 
@@ -40,7 +41,7 @@ int bruteForce(istream& inp) {
                 A(r + i * s + rr, i * t + cc) = bs[i](rr, cc);
     }
 
-    int best = numeric_limits<int>::min();
+    int best = std::numeric_limits<int>::min();
 
     vec x = l;
     bool ok = true;

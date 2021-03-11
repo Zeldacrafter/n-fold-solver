@@ -3,18 +3,18 @@
 
 #include "../src/bruteforce.cc"
 
-class BruteForceFixture : public ::testing::TestWithParam<string> {
+class BruteForceFixture : public ::testing::TestWithParam<std::string> {
 protected:
     int bruteForceOutput;
     int wantedOutput;
 
     BruteForceFixture() {
-        string path = GetParam();
+        std::string path = GetParam();
 
-        ifstream inputFile(path + ".in");
+        std::ifstream inputFile(path + ".in");
         bruteForceOutput = bruteForce(inputFile);
 
-        ifstream outputFile(path + ".out");
+        std::ifstream outputFile(path + ".out");
         outputFile >> wantedOutput;
     }
 };
