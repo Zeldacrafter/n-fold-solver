@@ -41,6 +41,7 @@ int bruteForce(istream& inp) {
                 A(r + i * s + rr, i * t + cc) = bs[i](rr, cc);
     }
 
+    cout << A << endl;
     int best = numeric_limits<int>::min();
 
     vec x = l;

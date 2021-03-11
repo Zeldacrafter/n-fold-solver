@@ -21,10 +21,14 @@ jobs:
 
     - name: Build
       run: bash build.sh -t
+      
+    - name: Test
+      working-directory: ${{runner.workspace}}/n-fold-solver
+      run: ./nFold_tests
 
     - name: Test
-      working-directory: ${{runner.workspace}}/n-fold-solver/build/test
-      run: GTEST_OUTPUT=xml:test-results/ GTEST_COLOR=1 ctest -V
+      working-directory: ${{runner.workspace}}/n-fold-solver
+      run: GTEST_OUTPUT=xml:build/test-results/ GTEST_COLOR=1 ./nFold_tests -V
 
     - name: Upload test results
       uses: actions/upload-artifact@v2

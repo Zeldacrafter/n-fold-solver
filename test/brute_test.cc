@@ -3,17 +3,32 @@
 
 #include "../src/bruteforce.cc"
 
-void testFile(string path) {
+class BruteForceFixture : public ::testing::TestWithParam<string> {
+protected:
+    string path;
+
+    BruteForceFixture() {
+        path = GetParam();
+    }
+};
+
+TEST_P(BruteForceFixture, BruteForceTest) {
+    string path = GetParam();
+
     ifstream outputFile(path + ".out");
     int solution;
     outputFile >> solution;
+    cout << "For path " << path << ".out: " << solution << endl;
 
     ifstream inputFile(path + ".in");
-
     ASSERT_EQ(solution, bruteForce(inputFile));
 }
 
-TEST(GoogleTestCi, BruteForceTest) {
-    testFile("input/max-small");
-    testFile("input/max-large");
-}
+INSTANTIATE_TEST_CASE_P(
+    BruteForceTests,
+    BruteForceFixture,
+    ::testing::Values(
+        "input/max-small",
+        "input/max-large"
+    )
+);
