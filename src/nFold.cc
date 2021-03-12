@@ -60,7 +60,7 @@ class NFold {
     }
 
     template <typename U>
-    friend std::ostream& operator<<(std::ostream& outp, NFold<U>& x) {
+    friend std::ostream& operator<<(std::ostream& outp, NFold<U> x) {
         outp << dvar(x.n, x.r, x.s, x.t) << std::endl
              << "A: " << std::endl;
         F0R(rr, x.r + x.n*x.s) {
@@ -76,3 +76,25 @@ class NFold {
         return inp >> x.l >> x.u >> x.b >> x.c >> x.as >> x.bs;
     }
 };
+
+
+// Constructs an nFold as described by Jansens paper in chapter 4.
+// This is used to find an initial solution for the original input nfold.
+template <typename T>
+NFold<T> constructAInit(const NFold<T>& x) {
+    const int n = x.n, r = x.r, s = x.s, t = x.t;
+
+    NFold<T> res(n, r, s, t + r + s);
+
+    F0R(i, n) {
+        res.as[i].block(0, 0,     r, t) = x.as[i];
+        res.as[i].block(0, t,     r, r).setIdentity();
+        res.as[i].block(0, t + r, r, s).setZero();
+
+        res.bs[i].block(0, 0,     s, t) = x.bs[i];
+        res.bs[i].block(0, t,     s, r).setZero();
+        res.bs[i].block(0, t + r, s, s).setIdentity();
+    }
+
+    return res;
+}

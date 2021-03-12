@@ -4,14 +4,19 @@
 #include "bruteforce.cc"
 
 int main() {
+    using namespace std;
+
     int n, r, s, t;
-    std::cin >> n >> r >> s >> t;
+    cin >> n >> r >> s >> t;
 
     NFold<int> nfold(n, r, s, t);
-    std::cin >> nfold;
+    cin >> nfold;
 
-    std::cout << nfold;
+    cout << nfold << endl;
+    
+    cout << "A_init:" << endl
+         << constructAInit(nfold) << endl;
 
-    std::cout << bruteForce(nfold) << std::endl;
+    //cout << bruteForce(nfold) << endl;
     return 0;
 }

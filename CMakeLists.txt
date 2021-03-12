@@ -11,7 +11,7 @@ OPTION(MY_LOCAL OFF)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-add_compile_options(-Wall -Wextra -pedantic)
+add_compile_options(-Wall -Wextra -pedantic -Wno-ignored-qualifiers)
 if (MY_DEBUG)
     add_compile_options(-g -fsanitize=address -fsanitize=undefined)
     add_link_options(-fsanitize=address -fsanitize=undefined) # Pass -g too?
