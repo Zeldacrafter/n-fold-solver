@@ -3,7 +3,6 @@
 : '
 # No arguments provided. Build everything.
 if [ $# -eq 0 ] ; then
-    enable_src=true
     enable_test=true
     enable_bench=true
 fi
@@ -11,7 +10,6 @@ fi
 if [ $# -eq 0 ] ; then
     echo "No arguments provided."
     echo "Possible:"
-    echo "   --src"
     echo "   --test"
     echo "   --bench"
     echo "   --clean"
@@ -29,25 +27,18 @@ do
         -c)       echo "Cleaning"
                   rm -rf nFold_*
                   rm -rf build       ;;
-        --src)    enable_src=true    ;;
-        -s)       enable_src=true    ;;
         --test)   enable_test=true   ;;
         -t)       enable_test=true   ;;
         --bench)  enable_bench=true  ;;
         -b)       enable_bench=true  ;;
         --debug)  enable_debug=true  ;;
         -d)       enable_debug=true  ;;
-        --remote) enable_remote=true ;;
-        -r)       enable_remote=true ;;
     esac
     shift
 done
 
 # Construct defines for build command
 args=""
-if [ "$enable_src" = true ] ; then
-    args="${args} -DBUILD_SRC=ON"
-fi
 if [ "$enable_test" = true ] ; then
     args="${args} -DBUILD_TEST=ON"
 fi
@@ -57,9 +48,6 @@ fi
 if [ "$enable_debug" = true ] ; then
     args="${args} -DMY_DEBUG=ON"
 fi
-if [ -z "$enable_remote" ] ; then
-    args="${args} -DMY_LOCAL=ON"
-fi
 
 if [ -z "$args" ] ; then
     echo "No module to build provided"
@@ -67,15 +55,16 @@ if [ -z "$args" ] ; then
 fi
 
 # Build with cmake and ninja
+echo cmake -Wno-deprecated -GNinja -B build . $args
 cmake -Wno-deprecated -GNinja -B build . $args
+echo ninja -C build
 ninja -C build
 
+ln -sf build/nFold_main nFold_main
+
 # Create links to finished builds
-if [ "$enable_src" = true ] ; then
-    ln -sf build/src/nFold_main nFold_main
-fi
 if [ "$enable_test" = true ] ; then
-    ln -sf build/test/nFold_tests nFold_tests
+    ln -sf build/test/nFold_test nFold_test
 fi
 if [ "$enable_bench" = true ] ; then
     ln -sf build/bench/nFold_bench nFold_bench

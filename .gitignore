@@ -33,3 +33,6 @@ build
 *.exe
 a.out
 *.app
+
+cmake-build-*/
+.idea/

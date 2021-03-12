@@ -1,4 +1,12 @@
-cmake_minimum_required(VERSION 3.14)
+set(NAME_SRC ${PROJECT_NAME}_src)
 
-set(SRC_NAME ${PROJECT_NAME}_main)
-add_executable(${SRC_NAME} main.cc)
+set(HEADER_FILES
+        template.h)
+
+set(SOURCE_FILES
+        NFold.cpp bruteforce.cpp)
+
+find_package(Eigen3 3.3 REQUIRED NO_MODULE)
+
+add_library(${NAME_SRC} STATIC ${SOURCE_FILES} ${HEADER_FILES})
+target_link_libraries(${NAME_SRC} Eigen3::Eigen)

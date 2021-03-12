@@ -1,4 +1,5 @@
-#include "template.hh"
+#include <Eigen/Dense>
+#include "template.h"
 
 template<typename T>
 using Mat = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
@@ -14,22 +15,22 @@ std::istream& operator>>(std::istream& inp, Vec<T>& x) {
 template<typename T>
 std::istream& operator>>(std::istream& inp, Mat<T>& x) {
     F0R(r, x.rows())
-        F0R(c, x.cols())
-            inp >> x(r, c);
+    F0R(c, x.cols())
+    inp >> x(r, c);
     return inp;
 }
 
 template<typename T>
 class NFold {
-  public:
+public:
     size_t n, r, s, t;
     Vec<T> l, u, b, c;
     std::vector<Mat<T>> as, bs;
 
-    NFold(size_t _n, size_t _r, size_t _s, size_t _t) 
-        : n{_n}, r{_r}, s{_s}, t{_t},
-          l(n*t), u(n*t), b(r + n*s), c(n*t),
-          as(n, Mat<T>(r, t)), bs(n, Mat<T>(s, t)) { }
+    NFold(size_t _n, size_t _r, size_t _s, size_t _t)
+            : n{_n}, r{_r}, s{_s}, t{_t},
+              l(n*t), u(n*t), b(r + n*s), c(n*t),
+              as(n, Mat<T>(r, t)), bs(n, Mat<T>(s, t)) { }
 
     // Function call operator accesses the matrix element in that position.
     T operator()(size_t row, size_t col) {
@@ -65,7 +66,7 @@ class NFold {
              << "A: " << std::endl;
         F0R(rr, x.r + x.n*x.s) {
             F0R(cc, x.n*x.t)
-                outp << x(rr, cc) << ' ';
+            outp << x(rr, cc) << ' ';
             outp << std::endl;
         }
         return outp;

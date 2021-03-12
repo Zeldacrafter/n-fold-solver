@@ -24,7 +24,7 @@ jobs:
 
     - name: Test
       working-directory: ${{runner.workspace}}/n-fold-solver
-      run: GTEST_OUTPUT=xml:build/test-results/ GTEST_COLOR=1 ./nFold_tests -V
+      run: GTEST_OUTPUT=xml:build/test-results/ GTEST_COLOR=1 ./nFold_test -V
 
     - name: Upload test results
       uses: actions/upload-artifact@v2

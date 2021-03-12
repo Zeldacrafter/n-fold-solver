@@ -1,9 +1,8 @@
-#include <bits/stdc++.h>
 #include <Eigen/Dense>
 #include <iostream>
 
-#include "template.hh"
-#include "nFold.cc"
+#include "template.h"
+#include "NFold.cpp"
 
 int bruteForce(const NFold<int>& nfold) {
     int best = std::numeric_limits<int>::min();
@@ -28,4 +27,3 @@ int bruteForce(const NFold<int>& nfold) {
 
     return best;
 }
-

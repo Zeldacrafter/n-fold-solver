@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <fstream>
 
-#include "../src/bruteforce.cc"
+#include "bruteforce.cpp"
 
 class BruteForceFixture : public ::testing::TestWithParam<std::string> {
 protected:
@@ -28,10 +28,10 @@ TEST_P(BruteForceFixture, BruteForceTest) {
 }
 
 INSTANTIATE_TEST_CASE_P(
-    BruteForceTests,
-    BruteForceFixture,
-    ::testing::Values(
-        "input/max-small",
-        "input/max-large"
-    )
+        BruteForceTests,
+        BruteForceFixture,
+        ::testing::Values(
+                "input/max-small",
+                "input/max-large"
+        )
 );

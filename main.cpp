@@ -1,7 +1,5 @@
-#include <Eigen/Dense>
-
-#include "template.hh"
-#include "bruteforce.cc"
+#include "template.h"
+#include "bruteforce.cpp"
 
 int main() {
     using namespace std;
@@ -13,7 +11,7 @@ int main() {
     cin >> nfold;
 
     cout << nfold << endl;
-    
+
     cout << "A_init:" << endl
          << constructAInit(nfold) << endl;
 
