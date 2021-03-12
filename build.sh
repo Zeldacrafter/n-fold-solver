@@ -57,10 +57,10 @@ if [ "$enable_local" = true ] ; then
 fi
 
 # Build with cmake and ninja
-echo cmake -Wno-deprecated -GNinja -B build . $args
-cmake -Wno-deprecated -GNinja -B build . $args
-echo ninja -C build
-ninja -C build
+cmake -Wno-deprecated -B build . $args
+pushd build
+make
+popd
 
 ln -sf build/nFold_main nFold_main
 

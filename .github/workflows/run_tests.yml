@@ -13,14 +13,11 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: Install Ninja
-      run: sudo apt-get install ninja-build
-
     - name: Install Eigen
       run: sudo apt-get install libeigen3-dev
 
     - name: Build
-      run: bash build.sh -t
+      run: bash build.sh -t -l
 
     - name: Test
       working-directory: ${{runner.workspace}}/n-fold-solver

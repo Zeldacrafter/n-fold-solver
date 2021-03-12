@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.17)
+cmake_minimum_required(VERSION 3.10.2)
 project(nFold)
 
 OPTION(MY_DEBUG OFF)
@@ -33,6 +33,7 @@ add_executable(${NAME_MAIN} ${SOURCE_FILES})
 
 include_directories(src)
 if(CUSTOM_EIGEN_IMPORT)
+    cmake_policy(SET CMP0079 NEW)
     find_package(Eigen3 3.3 REQUIRED NO_MODULE)
     target_link_libraries(${NAME_MAIN} Eigen3::Eigen)
 endif(CUSTOM_EIGEN_IMPORT)
