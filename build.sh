@@ -7,6 +7,7 @@ if [ $# -eq 0 ] ; then
     enable_bench=true
 fi
 '
+: '
 if [ $# -eq 0 ] ; then
     echo "No arguments provided."
     echo "Possible:"
@@ -16,6 +17,7 @@ if [ $# -eq 0 ] ; then
     echo "   --debug"
     exit -1
 fi
+'
 
 # Handle command line arguments
 while test $# -gt 0
@@ -33,6 +35,8 @@ do
         -b)       enable_bench=true  ;;
         --debug)  enable_debug=true  ;;
         -d)       enable_debug=true  ;;
+        -local)   enable_local=true  ;;
+        -l)       enable_local=true  ;;
     esac
     shift
 done
@@ -48,10 +52,8 @@ fi
 if [ "$enable_debug" = true ] ; then
     args="${args} -DMY_DEBUG=ON"
 fi
-
-if [ -z "$args" ] ; then
-    echo "No module to build provided"
-    exit 1
+if [ "$enable_local" = true ] ; then
+    args="${args} -DCUSTOM_EIGEN_IMPORT=ON"
 fi
 
 # Build with cmake and ninja

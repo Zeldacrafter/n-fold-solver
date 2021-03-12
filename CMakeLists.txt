@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.17)
 project(nFold)
 
 OPTION(MY_DEBUG OFF)
+OPTION(CUSTOM_EIGEN_IMPORT OFF)
 OPTION(BUILD_SRC OFF)
 OPTION(BUILD_TEST OFF)
 OPTION(BUILD_BENCH OFF)
@@ -30,10 +31,11 @@ endif(MY_DEBUG)
 set(SOURCE_FILES main.cpp)
 add_executable(${NAME_MAIN} ${SOURCE_FILES})
 
-# Add dependencies for main module
 include_directories(src)
-find_package(Eigen3 3.3 REQUIRED NO_MODULE)
-target_link_libraries(${NAME_MAIN} Eigen3::Eigen)
+if(CUSTOM_EIGEN_IMPORT)
+    find_package(Eigen3 3.3 REQUIRED NO_MODULE)
+    target_link_libraries(${NAME_MAIN} Eigen3::Eigen)
+endif(CUSTOM_EIGEN_IMPORT)
 
 ############################
 # Choose what to build     #
