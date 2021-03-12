@@ -10,7 +10,7 @@
 #define RALL(x) (x).rbegin(), (x).rend()
 #define SZ(x) (int)(x).size()
 #define FOR(a, b, c) for (auto a = (b); (a) < (c); ++(a))
-#define F0R(a, b) FOR (a, 0, (b))
+#define F0R(a, b) FOR (a, static_cast<decltype(b)>(0), (b))
 template <typename T>
 bool ckmin(T& a, const T& b) { return a > b ? a = b, true : false; }
 template <typename T>
@@ -21,14 +21,14 @@ bool ckmax(T& a, const T& b) { return a < b ? a = b, true : false; }
 #endif
 #define dout if (DEBUG) std::cerr
 // Output all passed variables with their corresponding name and value.
-#define dvarimpl(...) mkDB(#__VA_ARGS__, __VA_ARGS__) << "\e[0m "
-#define dvar(...) " \e[35m" << dvarimpl(__VA_ARGS__)
-#define dvarr(...) " \e[31m" << dvarimpl(__VA_ARGS__)
-#define dvarb(...) " \e[34m" << dvarimpl(__VA_ARGS__)
-#define dvarg(...) " \e[32m" << dvarimpl(__VA_ARGS__)
-#define dvary(...) " \e[33m" << dvarimpl(__VA_ARGS__)
-#define dvarc(...) " \e[36m" << dvarimpl(__VA_ARGS__)
-#define dvari(...) " \e[7m" << dvarimpl(__VA_ARGS__)
+#define dvarimpl(...) mkDB(#__VA_ARGS__, __VA_ARGS__) << "\033[0m "
+#define dvar(...) " \033[35m" << dvarimpl(__VA_ARGS__)
+#define dvarr(...) " \033[31m" << dvarimpl(__VA_ARGS__)
+#define dvarb(...) " \033[34m" << dvarimpl(__VA_ARGS__)
+#define dvarg(...) " \033[32m" << dvarimpl(__VA_ARGS__)
+#define dvary(...) " \033[33m" << dvarimpl(__VA_ARGS__)
+#define dvarc(...) " \033[36m" << dvarimpl(__VA_ARGS__)
+#define dvari(...) " \033[7m" << dvarimpl(__VA_ARGS__)
 
 ///////////////////////////////////////////////////////////////
 // Utility functions.

@@ -22,27 +22,25 @@ std::istream& operator>>(std::istream& inp, Mat<T>& x) {
 template<typename T>
 class NFold {
   public:
-    int n, r, s, t;
+    size_t n, r, s, t;
     Vec<T> l, u, b, c;
     std::vector<Mat<T>> as, bs;
 
-    NFold(int _n, int _r, int _s, int _t) : n{_n}, r{_r}, s{_s}, t{_t} {}
-
-    NFold(int _n, int _r, int _s, int _t, 
-            Vec<T> _l, Vec<T> _u,
-            std::vector<Mat<T>> _as, std::vector<Mat<T>> _bs)
-            : n{_n}, r{_r}, s{_s}, t{_t}, l{_l}, u{_u}, as{_as}, bs{_bs} { }
+    NFold(size_t _n, size_t _r, size_t _s, size_t _t) 
+        : n{_n}, r{_r}, s{_s}, t{_t},
+          l(n*t), u(n*t), b(r + n*s), c(n*t),
+          as(n, Mat<T>(r, t)), bs(n, Mat<T>(s, t)) { }
 
     // Function call operator accesses the matrix element in that position.
-    T operator()(int row, int col) {
-        assert(row >= 0 && row < r + n*s);
-        assert(col >= 0 && col < n*t);
+    T operator()(size_t row, size_t col) {
+        assert(static_cast<size_t>(row) < r + n*s);
+        assert(static_cast<size_t>(col) < n*t);
 
         if(row < r) {
             return as[col/t](row, col%t); // A block
         } else {
-            int blockRow = (row - r)/s;
-            if( col >= blockRow*t && col < (blockRow + 1)*t ) {
+            size_t blockRow = (row - r)/s;
+            if(col >= blockRow*t && col < (blockRow + 1)*t) {
                 return bs[blockRow]( (row-r)%s, col%t ); // B block
             } else {
                 return 0; // 0 block
@@ -52,29 +50,12 @@ class NFold {
 
     // multiplication with a column vector
     Vec<T> operator*(const Vec<T>& x) const {
-        assert(SZ(x) == n*t);
+        assert(static_cast<size_t>(SZ(x)) == n*t);
 
         Vec<T> res(r + n*s);
-        F0R(i, r + n*s) {
-            res[i] = 0;
-            if(i < r) {
-                // In A block
-                int col = 0;
-                for(const Mat<T>& m : as) {
-                    F0R(_, m.cols()) {
-                        res[i] += m(i, col % t) * x(col);
-                        ++col;
-                    }
-                }
-            } else {
-                // In B block
-                int blockRow = (i - r)/s;
-                const Mat<T>& m = bs[blockRow];
-                F0R(col, t) {
-                    res[i] += m((i - r) % s, col) * x(blockRow*t + col);
-                }
-            }
-        }
+        res.fill(0);
+        F0R(i, n) res.head(r) += as[i] * x.segment(i * t, t);
+        F0R(i, n) res.segment(r + i*s, s) = bs[i] * x.segment(i * t, t);
         return res;
     }
 
@@ -92,12 +73,6 @@ class NFold {
 
     template <typename U>
     friend std::istream& operator>>(std::istream& inp, NFold<U>& x) {
-        x.l = Vec<T>(x.n*x.t);
-        x.u = Vec<T>(x.n*x.t);
-        x.b = Vec<T>(x.r + x.n*x.s);
-        x.c = Vec<T>(x.n*x.t);
-        x.as = std::vector<Mat<T>>(x.n, Mat<T>(x.r, x.t)); 
-        x.bs = std::vector<Mat<T>>(x.n, Mat<T>(x.s, x.t));
         return inp >> x.l >> x.u >> x.b >> x.c >> x.as >> x.bs;
     }
 };
