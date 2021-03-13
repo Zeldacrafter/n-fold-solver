@@ -16,6 +16,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 set(NAME_MAIN ${PROJECT_NAME}_main)
 
+# Boost stacktrace
+add_compile_options(-DBOOST_STACKTRACE_USE_BACKTRACE -g -rdynamic -ldl -lbacktrace)
+add_link_options(-ldl -lbacktrace)
+
 add_compile_options(-Wall -Wextra -pedantic -Wno-ignored-qualifiers)
 if (MY_DEBUG)
     add_compile_options(-g -fsanitize=address -fsanitize=undefined)

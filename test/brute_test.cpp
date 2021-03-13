@@ -16,7 +16,7 @@ protected:
         inputFile >> n >> r >> s >> t;
         NFold<int> nFold(n, r, s, t);
         inputFile >> nFold;
-        bruteForceOutput = bruteForce(nFold);
+        bruteForceOutput = bruteForceBest(nFold).second;
 
         std::ifstream outputFile(path + ".out");
         outputFile >> wantedOutput;

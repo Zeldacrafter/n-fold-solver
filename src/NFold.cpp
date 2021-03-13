@@ -1,10 +1,8 @@
+#pragma once
+
 #include <Eigen/Dense>
 #include "template.h"
 
-template<typename T>
-using Mat = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
-template<typename T>
-using Vec = Eigen::Matrix<T, Eigen::Dynamic, 1>;
 
 template<typename T>
 std::istream& operator>>(std::istream& inp, Vec<T>& x) {
@@ -70,6 +68,15 @@ public:
             outp << std::endl;
         }
         return outp;
+    }
+
+    T getDelta() {
+        T delta = std::numeric_limits<T>::min();
+        for(Mat<T>& x : as)
+            ckmax(delta, x.maxCoeff());
+        for(Mat<T>& x : bs)
+            ckmax(delta, x.maxCoeff());
+        return delta;
     }
 
     template <typename U>

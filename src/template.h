@@ -1,6 +1,16 @@
 #ifndef NFOLD_TEMPLATE_H
 #define NFOLD_TEMPLATE_H
 
+#include <boost/stacktrace.hpp>
+#include <Eigen/Dense>
+
+template<typename T>
+using Mat = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
+template<typename T>
+using Vec = Eigen::Matrix<T, Eigen::Dynamic, 1>;
+
+#define DEBUG 1
+
 // https://google.github.io/styleguide/cppguide.html#Template_metaprogramming
 // everything from the template metaprogramming section was
 // successfully ignored
@@ -21,7 +31,7 @@ bool ckmax(T& a, const T& b) { return a < b && (a = b, true); }
 #ifndef DEBUG
 #define DEBUG 0
 #endif
-#define dout if (DEBUG) std::cerr
+#define dout if (DEBUG) std::cout
 // Output all passed variables with their corresponding name and value.
 #define dvarimpl(...) mkDB(#__VA_ARGS__, __VA_ARGS__) << "\033[0m "
 #define dvar(...) " \033[35m" << dvarimpl(__VA_ARGS__)
@@ -63,6 +73,7 @@ template <typename T> std::false_type const_iterator_check(...);
 template <typename T> struct IsC : decltype(const_iterator_check<T>(nullptr)) {};
 // No new input/output for string as those already exist.
 template <> struct IsC<std::string> : std::false_type {};
+template <> struct IsC<boost::stacktrace::stacktrace> : std::false_type {};
 
 ///////////////////////////////////////////////////////////////
 // Begin Output
@@ -91,7 +102,7 @@ std::ostream& operator<<(std::ostream& o, const std::tuple<T>& t) {
 // Output for pairs via above defined tuple output routine.
 template <typename T1, typename T2>
 std::ostream& operator<<(std::ostream& o, const std::pair<T1, T2>& p) {
-    return o << '(' << p.fi << ", " << p.se << ')';
+    return o << '(' << p.first << ", " << p.second << ')';
 }
 
 // Output every element in a container with 'begin' and 'end' iterators.
@@ -178,19 +189,43 @@ operator<<(std::ostream& o, const PP<T, M>& p) {
 template <size_t M, typename... Ts>
 std::ostream& operator<<(std::ostream& o, const PP<std::tuple<Ts...>, M>& p) {
     const std::string& sep = p.idx < M ? (*p.se)[p.idx] : " ";
+    o << '(';
     for_each(p.v, [&](auto& x, size_t i) {
         if(i) o << sep;
-        o << PP<std::decay_t<decltype(x)>, M>(x, p.se, p.idx + 1);
+        o << PP<std::decay_t<decltype(x)>, M>(x, p.second, p.idx + 1);
     });
-    return o;
+    return o << ')';
 }
 
 // Print pairs with the specified seperator for that level.
 template <typename T1, typename T2, size_t M>
 std::ostream& operator<<(std::ostream& o, const PP<std::pair<T1, T2>, M>& p) {
     const std::string& sep = p.idx < M ? (*p.se)[p.idx] : " ";
-    return o << PP<T1, M>(p.v.fi, p.se, p.idx + 1) << sep
-             << PP<T2, M>(p.v.se, p.se, p.idx + 1);
+    o << '(';
+    return o << PP<T1, M>(p.v.first, p.se, p.idx + 1) << sep
+             << PP<T2, M>(p.v.second, p.se, p.idx + 1) << ')';
+}
+
+template <typename K, size_t M>
+std::ostream& operator<<(std::ostream& o, const PP<const Vec<K>, M>& p) {
+    const std::string& sep = p.idx < M ? (*p.se)[p.idx] : " ";
+    o << '<';
+    F0R (i, static_cast<size_t>(p.v.size())) {
+        if (i) o << sep;
+        o << p.v(i);
+    }
+    return o << '>';
+}
+
+template <typename K, size_t M>
+std::ostream& operator<<(std::ostream& o, const PP<Vec<K>, M>& p) {
+const std::string& sep = p.idx < M ? (*p.se)[p.idx] : " ";
+o << '<';
+F0R (i, static_cast<size_t>(p.v.size())) {
+if (i) o << sep;
+o << p.v(i);
+}
+return o << '>';
 }
 
 // Print std-library-container with the specified seperator.
@@ -200,10 +235,11 @@ operator<<(std::ostream& o, const PP<T, M>& p) {
     // Seperator for the current layer (or default)
     const std::string& sep = p.idx < M ? (*p.se)[p.idx] : " ";
     // Print every container element
+    o << '[';
     for (auto it = p.v.cbegin(); it != p.v.cend(); ++it)
         o << PP<typename T::value_type, M>(*it, p.se, p.idx + 1)
           << (next(it) != p.v.cend() ? sep : "");
-    return o;
+    return o << ']';
 }
 
 // This function is the main way for a user to interface with the PrettyPrinter.
