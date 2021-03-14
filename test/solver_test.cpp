@@ -29,8 +29,9 @@ TEST_P(SolverFixture, BruteForceTest) {
 }
 
 TEST_P(SolverFixture, AlgorithmTest) {
-    int solution = (new Solver(nfold))->solve().second;
-    ASSERT_EQ(wantedOutput, solution);
+    auto solution = solver::Solver(nfold).solve();
+    ASSERT_TRUE(solution);
+    ASSERT_EQ(wantedOutput, solution->second);
 }
 
 INSTANTIATE_TEST_CASE_P(

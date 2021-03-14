@@ -21,7 +21,7 @@ add_compile_options(-DBOOST_STACKTRACE_USE_BACKTRACE -g -rdynamic -ldl -lbacktra
 add_link_options(-ldl -lbacktrace)
 
 add_compile_options(-Wall -Wextra -pedantic -Wno-ignored-qualifiers)
-add_compile_options(-O2)
+add_compile_options(-Ofast)
 
 if (MY_DEBUG)
     add_compile_options(-g -fsanitize=address -fsanitize=undefined)

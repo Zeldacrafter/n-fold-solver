@@ -2,7 +2,7 @@
 
 #include <Eigen/Dense>
 #include "template.h"
-#include <tsl/hopscotch_map.h>
+#include "../third-party/hopscotch-map/include/tsl/hopscotch_map.h"
 
 
 template<typename T>
@@ -107,7 +107,7 @@ std::pair<NFold<T>, Vec<T>> constructAInit(const NFold<T>& x) {
         res.bs[i].block(0, t + r, s, s).setIdentity();
     }
 
-    // Construct new righthand sind
+    // Construct new righthand side
     res.b = x.b - x*x.l;
 
     // Construct upper and lower bound
