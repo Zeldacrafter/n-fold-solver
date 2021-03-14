@@ -17,15 +17,16 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(NAME_MAIN ${PROJECT_NAME}_main)
 
 # Boost stacktrace
+
 add_compile_options(-DBOOST_STACKTRACE_USE_BACKTRACE -g -rdynamic -ldl -lbacktrace)
 add_link_options(-ldl -lbacktrace)
-
 add_compile_options(-Wall -Wextra -pedantic -Wno-ignored-qualifiers)
+add_compile_options(-O2)
+
 if (MY_DEBUG)
     add_compile_options(-g -fsanitize=address -fsanitize=undefined)
     add_link_options(-fsanitize=address -fsanitize=undefined)
 else()
-    add_compile_options(-O2)
 endif(MY_DEBUG)
 
 ############################

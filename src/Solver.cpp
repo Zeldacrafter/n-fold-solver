@@ -1,6 +1,8 @@
 #pragma once
 
 #include <map>
+#include <boost/container_hash/hash.hpp>
+
 #include "NFold.cpp"
 #include "bruteforce.cpp"
 
@@ -10,14 +12,21 @@ typedef int T;
 struct cmpVecs {
     bool operator()(const Vec<T>& a, const Vec<T>& b) const {
         assert(SZ(a) == SZ(b));
-        F0R(i, SZ(a))
-            if(a(i) != b(i))
-                return a(i) < b(i);
-        return false;
+        return std::lexicographical_compare(a.data(), a.data() + SZ(a), b.data(), b.data() + SZ(b));
+    }
+};
+
+struct hashVecs {
+    size_t operator()(const Vec<T>& key) const {
+        size_t res = 0;
+        F0R(i, SZ(key)) boost::hash_combine(res, key(i));
+        return res;
     }
 };
 
 class Solver {
+    typedef std::vector<std::pair<long long, Vec<T>>> stateVec;
+    typedef std::unordered_map<Vec<T>, stateVec, hashVecs> graphMap;
 public:
     NFold<T> x;
     T l_a;
@@ -34,18 +43,17 @@ public:
         l_a = part1 * part2;
     }
 
-    T solve() {
-        using std::endl;
-        dout << endl << dvar(l_a) << endl;
-
+    std::pair<Vec<T>, T> solve() {
         Vec<T> initSolution = findInitSol();
         assert(x * initSolution == x.b);
-        dout << "Found init solution " << pp(initSolution)
-             << " with weight " << initSolution.dot(x.c) << endl;
+        return solve(initSolution);
+    }
+
+    std::pair<Vec<T>, T> solve(Vec<T>& initSolution, bool findZero = false) {
+        assert(x*initSolution == x.b);
 
         Vec<T> z0 = initSolution;
-        bool changed = true; // TODO: Actually calc iterations on N.
-        while(changed) {
+        for(bool changed = true; changed;) {
             changed = false;
 
             // Number of bits of lambda we have to guess is bounded
@@ -59,91 +67,105 @@ public:
             F0R(i, maxIters + 1) {
                 T lambda = 1 << i;
 
-                Vec<T> l = (((x.l - z0).array() + lambda - 1)/lambda)
-                        .max(-l_a)
-                        .matrix();
-                Vec<T> u = (((x.u - z0).array())/lambda)
-                        .min(l_a)
-                        .matrix();
-                dout << dvar(i, lambda, pp(l), pp(u), pp(z0)) << endl;
+                Vec<T> l = (((x.l - z0).array() + lambda - 1)/lambda);   //.max(-l_a).matrix();
+                Vec<T> u = (((x.u - z0).array())/lambda);                //.min(l_a).matrix();
 
                 // After ever augmentation step we should have Ay = 0 for the result of the augmentation step;
                 Vec<T> augRes = solveAugIp(l, u);
-                dout << "Augmentation result: " << dvar(pp(augRes), pp(x * augRes)) << endl;
                 assert(x * augRes == Vec<T>::Zero(SZ(x.b)));
 
                 // The resulting vector has to be an integer solution to the nfold.
                 Vec<T> nextCandidate = z0 + lambda*augRes;
                 assert(x * nextCandidate == x.b);
 
-                dout << "Found valid candidate with cost " << dvar(nextCandidate.dot(x.c)) << endl;
                 if(nextCandidate.dot(x.c) > currBest.dot(x.c)) {
-                    dout << "New best found with weight " << nextCandidate.dot(x.c) << endl;
                     currBest = nextCandidate;
                     changed = true;
+
+                    // If we are only looking for a zero weight solution we can just return here.
+                    if(findZero && nextCandidate.dot(x.c) == 0) {
+                        return std::make_pair(nextCandidate, 0);
+                    }
                 }
             }
             z0 = currBest; // TODO: Why not replace it earlier?
         }
 
-        return z0.dot(x.c);
+        return std::make_pair(z0, z0.dot(x.c));
     }
 
     Vec<T> solveAugIp(const Vec<T>& l, const Vec<T>& u) {
+        Vec<T> zero = Vec<T>::Zero(x.r + x.s);
+
         // Track the weight and path to the current position.
-        std::pair<long long, Vec<T>> state = std::make_pair(0, Vec<T>(0));
+        graphMap curr;
+        curr[zero].push_back(std::make_pair(0, Vec<T>(0)));
 
         F0R(block, x.n) {
             // Move to the next block
-            state = processBlock(block, state, l, u);
+            processBlock(block, curr, l, u);
         }
 
-        return state.second;
+        // TODO: with stl
+        Vec<T> best;
+        long long bestWgt = std::numeric_limits<T>::min();
+
+        for(auto [wgt, v] : curr[zero])
+            if(ckmax(bestWgt, wgt))
+                best = v;
+        return best;
     }
 
-    std::pair<long long, Vec<T>> processBlock(size_t block, const std::pair<long long, Vec<T>>& state,
-                                              const Vec<T>& l, const Vec<T>& u) {
-        T delta = x.getDelta();
-        std::map<Vec<T>, std::pair<long long, Vec<T>>, cmpVecs> curr;
-        curr[Vec<T>::Zero(x.r + x.s)] = state;
+    void processBlock(size_t block, graphMap& curr, const Vec<T>& l, const Vec<T>& u) {
+        Vec<T> zero = Vec<T>::Zero(x.r + x.s);
 
         Mat<T> M(x.r + x.s, x.t);
         M << x.as[block], x.bs[block];
 
         F0R(col, x.t) {
-            // We are moving to U^(block)_col now.
+            size_t yPos = block * x.t + col;
 
-            std::map<Vec<T>, std::pair<long long, Vec<T>>, cmpVecs> next;
+            graphMap next;
+            for(auto& [oldPos, wgtAndVecs] : curr) {
+                for(auto& [wgt, oldVec] : wgtAndVecs) {
 
-            for(auto& [oldPos, wgtAndVec] : curr) {
-                auto& [wgt, oldVec] = wgtAndVec;
+                    FOR(y, l(yPos), u(yPos) + 1) {
 
-                size_t yPos = block*x.t + col;
-                FOR(y, l(yPos), u(yPos) + 1) {
-                    Vec<T> candidate = y*M.col(col) + oldPos;
+                        Vec<T> candidate = y * M.col(col) + oldPos;
+                        Vec<T> newVec(SZ(oldVec) + 1);
+                        newVec << oldVec, y;
+                        next[candidate].push_back(std::make_pair(wgt + x.c(yPos) * y, newVec));
 
-                    if(candidate.lpNorm<Eigen::Infinity>() <= delta*l_a) {
-                        long long newWgt = wgt + x.c(yPos)*y;
-                        // cannot just call ckmax because we need to replace 0 entries.
-                        if(!next.count(candidate) || newWgt > next[candidate].first) {
-
-                            Vec<T> newBest(SZ(oldVec) + 1);
-                            newBest << oldVec, y;
-                            next[candidate] = std::make_pair(wgt + x.c(yPos)*y, newBest);
-                        }
+                        // TODO: if (candidate.lpNorm<Eigen::Infinity>() <= delta * l_a) {
                     }
                 }
             }
+
             curr = std::move(next);
         }
 
-        assert(curr.count(Vec<T>::Zero(x.r + x.s)));
-        return curr[Vec<T>::Zero(x.r + x.s)];
+        for (auto it = curr.begin(); it != curr.end();) {
+            if (!it->first.tail(x.s).isZero()) it = curr.erase(it);
+            else ++it;
+        }
+
+        assert(SZ(curr));
     }
 
     Vec<T> findInitSol() {
-        // TODO: Actual implementation here
-        return bruteForceWorst(x).first;
+        auto [aInit, initSol] = constructAInit(x);
+        Solver solver(aInit);
+        auto [sol, wgt] = solver.solve(initSol, true);
+
+        // TODO: Handle non zero wgt -> No solution
+
+        Vec<T> res(x.n*x.t);
+        F0R(i, x.n)
+            res.segment(i*x.t, x.t) = sol.segment(i*(x.t + x.s + x.r), x.t);
+        res = res + x.l; // The original solution is offset by l
+
+        assert(x*res == x.b);
+        return res;
     }
 
 };

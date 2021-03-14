@@ -64,7 +64,7 @@ public:
              << "A: " << std::endl;
         F0R(rr, x.r + x.n*x.s) {
             F0R(cc, x.n*x.t)
-            outp << x(rr, cc) << ' ';
+                outp << x(rr, cc) << ' ';
             outp << std::endl;
         }
         return outp;
@@ -89,14 +89,16 @@ public:
 // Constructs an nFold as described by Jansens paper in chapter 4.
 // This is used to find an initial solution for the original input nfold.
 template <typename T>
-NFold<T> constructAInit(const NFold<T>& x) {
+std::pair<NFold<T>, Vec<T>> constructAInit(const NFold<T>& x) {
     const int n = x.n, r = x.r, s = x.s, t = x.t;
 
     NFold<T> res(n, r, s, t + r + s);
 
+    //Construct new matrix
     F0R(i, n) {
         res.as[i].block(0, 0,     r, t) = x.as[i];
-        res.as[i].block(0, t,     r, r).setIdentity();
+        if(!i) res.as[i].block(0, t, r, r).setIdentity();
+        else   res.as[i].block(0, t, r, r).setZero();
         res.as[i].block(0, t + r, r, s).setZero();
 
         res.bs[i].block(0, 0,     s, t) = x.bs[i];
@@ -104,5 +106,45 @@ NFold<T> constructAInit(const NFold<T>& x) {
         res.bs[i].block(0, t + r, s, s).setIdentity();
     }
 
-    return res;
+    // Construct new righthand sind
+    res.b = x.b - x*x.l;
+
+    // Construct upper and lower bound
+    F0R(i, n) {
+        res.l.segment(i*(t + r + s), t) = (x.u - x.l).segment(i*t, t);
+        res.u.segment(i*(t + r + s), t) = (x.u - x.l).segment(i*t, t);
+        if(!i) {
+            res.l.segment(i*(t + r + s) + t, r) = res.b.segment(0, r);
+            res.u.segment(i*(t + r + s) + t, r) = res.b.segment(0, r);
+        } else {
+            res.l.segment(i*(t + r + s) + t, r).setZero();
+            res.u.segment(i*(t + r + s) + t, r).setZero();
+        }
+        res.l.segment(i*(t + r + s) + t + r, s) = res.b.segment(r + i*s, s);
+        res.u.segment(i*(t + r + s) + t + r, s) = res.b.segment(r + i*s, s);
+    }
+    res.l = res.l.array().min(0);
+    res.u = res.u.array().max(0);
+
+    // Construct cost vector
+    res.c.setZero();
+    res.c.segment(t, r).setOnes();
+    F0R(j, r) // Identity matrix for A_1
+       if(res.b(j) >= 0)
+           res.c(t + j) = -1;
+    F0R(i, n) { // Identity matrix for B_i
+        res.c.segment(t + r + i*(t + r + s), s).setOnes();
+        F0R(j, s)
+            if(res.b(r + i*s + j) >= 0)
+                res.c(t + r + i*(t + r + s) + j) = -1;
+    }
+
+    // Construct init sol
+    Vec<T> initSol = Vec<T>::Zero((t + r + s)*n);
+    initSol.segment(t, r) = res.b.segment(0, r);
+    F0R(i, n) {
+        initSol.segment((t + r + s)*i + t + r, s) = res.b.segment(r + i*s, s);
+    }
+
+    return std::make_pair(res, initSol);
 }

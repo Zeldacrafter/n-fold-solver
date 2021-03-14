@@ -4,7 +4,7 @@ include(../cmake/GoogleTest.cmake)
 include(GoogleTest)
 
 set(SOURCE_FILES
-        brute_test.cpp
+        solver_test.cpp
         example_test.cpp
         )
 
