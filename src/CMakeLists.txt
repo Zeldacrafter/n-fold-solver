@@ -10,3 +10,4 @@ set(SOURCE_FILES
 
 add_library(${NAME_SRC} STATIC ${SOURCE_FILES} ${HEADER_FILES})
 target_link_libraries(${NAME_SRC} Eigen3::Eigen)
+target_link_libraries(${NAME_SRC} tsl::hopscotch_map)

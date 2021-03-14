@@ -17,9 +17,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(NAME_MAIN ${PROJECT_NAME}_main)
 
 # Boost stacktrace
-
 add_compile_options(-DBOOST_STACKTRACE_USE_BACKTRACE -g -rdynamic -ldl -lbacktrace)
 add_link_options(-ldl -lbacktrace)
+
 add_compile_options(-Wall -Wextra -pedantic -Wno-ignored-qualifiers)
 add_compile_options(-O2)
 
@@ -43,11 +43,15 @@ if(CUSTOM_EIGEN_IMPORT)
     target_link_libraries(${NAME_MAIN} Eigen3::Eigen)
 endif(CUSTOM_EIGEN_IMPORT)
 
+add_subdirectory(third-party/hopscotch-map)
+target_link_libraries(${NAME_MAIN} tsl::hopscotch_map)
+
 ############################
 # Choose what to build     #
 ############################
 
 add_subdirectory("src")
+
 
 if (BUILD_TEST)
     add_subdirectory("test")

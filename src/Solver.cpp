@@ -16,17 +16,16 @@ struct cmpVecs {
     }
 };
 
-struct hashVecs {
-    size_t operator()(const Vec<T>& key) const {
-        size_t res = 0;
-        F0R(i, SZ(key)) boost::hash_combine(res, key(i));
-        return res;
+template <typename K>
+struct std::hash<Vec<K>> {
+    size_t operator()(const Vec<K>& v) const {
+        return boost::hash_range(v.data(), v.data() + v.size());
     }
 };
 
 class Solver {
     typedef std::vector<std::pair<long long, Vec<T>>> stateVec;
-    typedef std::unordered_map<Vec<T>, stateVec, hashVecs> graphMap;
+    typedef tsl::hopscotch_map<Vec<T>, stateVec> graphMap;
 public:
     NFold<T> x;
     T l_a;
@@ -99,7 +98,7 @@ public:
 
         // Track the weight and path to the current position.
         graphMap curr;
-        curr[zero].push_back(std::make_pair(0, Vec<T>(0)));
+        curr[zero].emplace_back(0, Vec<T>(0));
 
         F0R(block, x.n) {
             // Move to the next block
@@ -134,7 +133,7 @@ public:
                         Vec<T> candidate = y * M.col(col) + oldPos;
                         Vec<T> newVec(SZ(oldVec) + 1);
                         newVec << oldVec, y;
-                        next[candidate].push_back(std::make_pair(wgt + x.c(yPos) * y, newVec));
+                        next[candidate].emplace_back(wgt + x.c(yPos) * y, newVec);
 
                         // TODO: if (candidate.lpNorm<Eigen::Infinity>() <= delta * l_a) {
                     }

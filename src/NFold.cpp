@@ -2,6 +2,7 @@
 
 #include <Eigen/Dense>
 #include "template.h"
+#include <tsl/hopscotch_map.h>
 
 
 template<typename T>
