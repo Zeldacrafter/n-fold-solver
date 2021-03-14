@@ -39,6 +39,7 @@ INSTANTIATE_TEST_CASE_P(
         SolverFixture,
         ::testing::Values(
                 "input/max-small",
-                "input/max-large"
+                "input/max-large",
+                "input/input-huge"
         )
 );

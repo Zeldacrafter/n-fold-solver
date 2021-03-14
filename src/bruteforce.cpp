@@ -6,11 +6,12 @@
 #include "template.h"
 #include "NFold.cpp"
 
-std::pair<Vec<int>, int> bruteForceBest(const NFold<int>& nfold) {
-    int best = std::numeric_limits<int>::min();
-    Vec<int> bestVec(1);
+template <typename T>
+std::pair<Vec<T>, T> bruteForceBest(const NFold<T>& nfold) {
+    int best = std::numeric_limits<T>::min();
+    Vec<T> bestVec(1);
 
-    Vec<int> x = nfold.l;
+    Vec<T> x = nfold.l;
     bool ok = true;
     while (ok) {
         if (nfold * x == nfold.b && ckmax(best, x.dot(nfold.c))) {
@@ -33,11 +34,12 @@ std::pair<Vec<int>, int> bruteForceBest(const NFold<int>& nfold) {
     return std::make_pair(bestVec, best);
 }
 
-std::pair<Vec<int>, int> bruteForceWorst(const NFold<int>& nfold) {
-    int worst = std::numeric_limits<int>::max();
-    Vec<int> worstVec(1);
+template <typename T>
+std::pair<Vec<T>, T> bruteForceWorst(const NFold<T>& nfold) {
+    T worst = std::numeric_limits<T>::max();
+    Vec<T> worstVec(1);
 
-    Vec<int> x = nfold.l;
+    Vec<T> x = nfold.l;
     bool ok = true;
     while (ok) {
         if (nfold * x == nfold.b && ckmin(worst, x.dot(nfold.c))) {

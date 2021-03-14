@@ -26,6 +26,8 @@ public:
     Vec<T> l, u, b, c;
     std::vector<Mat<T>> as, bs;
 
+    NFold() {};
+
     NFold(size_t _n, size_t _r, size_t _s, size_t _t)
             : n{_n}, r{_r}, s{_s}, t{_t},
               l(n*t), u(n*t), b(r + n*s), c(n*t),

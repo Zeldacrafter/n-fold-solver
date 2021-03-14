@@ -5,8 +5,6 @@
 
 #include "NFold.cpp"
 
-typedef int T;
-
 template <typename K>
 struct std::hash<Vec<K>> {
     size_t operator()(const Vec<K>& v) const {
@@ -19,10 +17,10 @@ namespace solver {
     using std::vector;
     using std::optional, std::nullopt;
 
-    typedef vector<std::pair<long long, Vec<T>>> stateVec;
-    typedef tsl::hopscotch_map<Vec<T>, std::pair<long long, Vec<T>>> graphMap;
 
+    template <typename T>
     class Solver {
+        typedef tsl::hopscotch_map<Vec<T>, std::pair<long long, Vec<T>>> graphMap;
 
     public:
         NFold<T> x;
@@ -70,7 +68,8 @@ namespace solver {
                         return make_pair(nextCandidate, 0);
                     }
                 }
-/*
+                /*
+                // TODO: Check if this leads to an actual speedup on larger testcases.
                 // Number of bits of lambda we have to guess is bounded
                 // by ceil(log(gamma)) + 1
                 T gamma = (x.u - x.l).maxCoeff();
@@ -102,7 +101,7 @@ namespace solver {
                         }
                     }
                 }
-*/
+                */
             }
 
             return make_pair(z0, z0.dot(x.c));
