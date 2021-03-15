@@ -3,6 +3,10 @@
 
 #include <boost/stacktrace.hpp>
 #include <Eigen/Dense>
+#include <iostream>
+#include <string>
+#include <utility>
+#include <memory>
 
 template<typename T>
 using Mat = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
@@ -14,10 +18,6 @@ using Vec = Eigen::Matrix<T, Eigen::Dynamic, 1>;
 // https://google.github.io/styleguide/cppguide.html#Template_metaprogramming
 // everything from the template metaprogramming section was
 // successfully ignored
-#include <iostream>
-#include <string>
-#include <utility>
-#include <memory>
 #define ALL(x) (x).begin(), (x).end()
 #define RALL(x) (x).rbegin(), (x).rend()
 #define SZ(x) (int)(x).size()

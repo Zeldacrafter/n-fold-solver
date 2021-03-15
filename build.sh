@@ -48,6 +48,7 @@ if [ "$enable_test" = true ] ; then
 fi
 if [ "$enable_bench" = true ] ; then
     args="${args} -DBUILD_BENCH=ON"
+    args="${args} -DCMAKE_BUILD_TYPE=Release"
 fi
 if [ "$enable_debug" = true ] ; then
     args="${args} -DMY_DEBUG=ON"

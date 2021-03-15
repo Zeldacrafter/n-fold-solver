@@ -73,15 +73,6 @@ public:
         return outp;
     }
 
-    T getDelta() {
-        T delta = std::numeric_limits<T>::min();
-        for(Mat<T>& x : as)
-            ckmax(delta, x.maxCoeff());
-        for(Mat<T>& x : bs)
-            ckmax(delta, x.maxCoeff());
-        return delta;
-    }
-
     template <typename U>
     friend std::istream& operator>>(std::istream& inp, NFold<U>& x) {
         return inp >> x.l >> x.u >> x.b >> x.c >> x.as >> x.bs;
