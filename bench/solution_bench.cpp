@@ -2,8 +2,8 @@
 #include <iostream>
 #include <fstream>
 
-#include "NFold.cpp"
-#include "Solver.cpp"
+#include "nfold_class.cpp"
+#include "solver_class.cpp"
 
 static void BM_Solution_Small(benchmark::State& state) {
     static bool setupDone = false;

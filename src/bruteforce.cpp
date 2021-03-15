@@ -1,10 +1,11 @@
 #pragma once
 
-#include <Eigen/Dense>
 #include <iostream>
 
+#include <Eigen/Dense>
+
 #include "template.h"
-#include "NFold.cpp"
+#include "nfold_class.cpp"
 
 template <typename T>
 std::pair<Vec<T>, T> bruteForceBest(const NFold<T>& nfold) {

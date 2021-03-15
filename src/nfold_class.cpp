@@ -1,8 +1,9 @@
 #pragma once
 
 #include <Eigen/Dense>
+#include <tsl/hopscotch_hash.h>
+
 #include "template.h"
-#include "../third-party/hopscotch-map/include/tsl/hopscotch_map.h"
 
 
 template<typename T>
@@ -26,7 +27,7 @@ public:
     Vec<T> l, u, b, c;
     std::vector<Mat<T>> as, bs;
 
-    NFold() {};
+    NFold() = default;
 
     NFold(size_t _n, size_t _r, size_t _s, size_t _t)
             : n{_n}, r{_r}, s{_s}, t{_t},

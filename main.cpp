@@ -1,9 +1,9 @@
-#include "src/template.h"
-#include "src/bruteforce.cpp"
-#include "src/Solver.cpp"
-
 #include <signal.h>
 #include <boost/stacktrace.hpp>
+
+#include "src/template.h"
+#include "src/bruteforce.cpp"
+#include "src/solver_class.cpp"
 
 void handler(int) {
     std::cerr << boost::stacktrace::stacktrace() << std::endl;

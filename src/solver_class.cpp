@@ -2,9 +2,11 @@
 
 #include <map>
 #include <boost/container_hash/hash.hpp>
+#include <tsl/hopscotch_map.h>
 
-#include "NFold.cpp"
+#include "nfold_class.cpp"
 
+// TODO: https://google.github.io/styleguide/cppguide.html#std_hash
 template <typename K>
 struct std::hash<Vec<K>> {
     size_t operator()(const Vec<K>& v) const {
@@ -17,16 +19,13 @@ namespace solver {
      *       But since L_A is very large any input that would benefit from it would not
      *       terminate before the heat death of the universe.
      */
-    using std::pair, std::make_pair;
-    using std::vector;
-    using std::optional, std::nullopt;
+    using ::std::pair, ::std::make_pair;
+    using ::std::optional, ::std::nullopt;
 
 
     template <typename T>
     class Solver {
-        typedef tsl::hopscotch_map<Vec<T>, std::pair<long long, Vec<T>>> graphLayer;
-
-    public:
+      public:
         explicit Solver(NFold<T>& _x) : x{_x} { }
 
         optional<pair<Vec<T>, T>> solve() {
@@ -39,38 +38,35 @@ namespace solver {
             }
         }
 
-        pair<Vec<T>, T> solve(const Vec<T> &initSolution, bool findZero = false) {
+        pair<Vec<T>, T> solve(const Vec<T> &initSolution, const optional<T> knownBest = nullopt) {
             assert(x * initSolution == x.b);
 
-            Vec<T>& z0 = initSolution;
+            Vec<T> z0 = initSolution;
             // As long as a better solution exists it is guaranteed that we find one.
             // This means we can improve our initial solution with a fix-point algorithm.
             for (bool changed = true; changed;) {
                 changed = false;
 
-                Vec<T> l = x.l - z0;
-                Vec<T> u = x.u - z0;
-
                 // After ever augmentation step we should have Ay = 0 for the result of the augmentation step.
                 // This means that we still have A(z0 + y) = b.
-                Vec<T> augRes = solveAugIp(l, u);
+                Vec<T> augRes = solveAugIp(x.l - z0, x.u - z0);
                 assert(x * augRes == Vec<T>::Zero(SZ(x.b)));
 
                 // The resulting vector has to be an integer solution to the nfold.
                 Vec<T> nextCandidate = z0 + augRes;
                 assert(x * nextCandidate == x.b);
 
-                T currWeight = nextCandidate.dot(x.c);
-                if (currWeight > z0.dot(x.c)) {
+                if (T currWeight = nextCandidate.dot(x.c); currWeight > z0.dot(x.c)) {
                     z0 = nextCandidate;
                     changed = true;
 
                     // Heuristic:
-                    // If we know that our optimal solution is at best 0 we can just return here.
+                    // If we know that our optimal solution is if one exists and are simply
+                    // concerned with finding one/determining if one exists we can return preemptively
                     // This is the case for finding an initial solution
                     // and cuts down on execution time by quite a bit.
-                    if (findZero && !currWeight) {
-                        return make_pair(nextCandidate, 0);
+                    if (knownBest && *knownBest == currWeight) {
+                        return make_pair(nextCandidate, currWeight);
                     }
                 }
                  /*
@@ -115,7 +111,9 @@ namespace solver {
             return make_pair(z0, z0.dot(x.c));
         }
 
-    private:
+      private:
+        typedef tsl::hopscotch_map<Vec<T>, pair<T, Vec<T>>> graphLayer;
+
         NFold<T> x;
 
         Vec<T> solveAugIp(const Vec<T> &l, const Vec<T> &u) {
@@ -127,14 +125,14 @@ namespace solver {
 
             F0R(block, x.n) {
                 // Move to the next block and save the result in curr.
-                processBlock(block, curr, l, u);
+                curr = processBlock(block, std::move(curr), l, u);
                 assert(SZ(curr));
             }
 
             return curr[zero].second;
         }
 
-        void processBlock(size_t block, graphLayer &curr, const Vec<T> &l, const Vec<T> &u) {
+        graphLayer processBlock(size_t block, graphLayer curr, const Vec<T> &l, const Vec<T> &u) {
             Vec<T> zero = Vec<T>::Zero(x.r + x.s);
 
             Mat<T> M(x.r + x.s, x.t);
@@ -169,11 +167,12 @@ namespace solver {
             }
 
             assert(SZ(curr));
+            return curr;
         }
 
         optional<Vec<T>> findInitSol() {
             auto[aInit, initSol] = constructAInit(x);
-            auto[sol, weight] = Solver(aInit).solve(initSol, true);
+            auto[sol, weight] = Solver(aInit).solve(initSol, 0);
 
             if(!weight) {
                 // Solution found.
@@ -191,4 +190,4 @@ namespace solver {
             }
         }
     };
-}
+} // namespace solver

@@ -2,8 +2,8 @@
 #include <fstream>
 
 #include "bruteforce.cpp"
-#include "NFold.cpp"
-#include "Solver.cpp"
+#include "nfold_class.cpp"
+#include "solver_class.cpp"
 
 class SolverFixture : public ::testing::TestWithParam<std::string> {
 protected:
