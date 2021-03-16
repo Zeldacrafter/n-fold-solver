@@ -22,14 +22,13 @@ namespace solver {
     using ::std::pair, ::std::make_pair;
     using ::std::optional, ::std::nullopt;
 
-
     template <typename T>
     class Solver {
       public:
         explicit Solver(NFold<T>& _x) : x{_x} { }
 
         optional<pair<Vec<T>, T>> solve() {
-            optional<Vec<T>> initSolution = findInitSol();
+            optional<Vec<T>> initSolution = findInitSol(x);
             if (initSolution) {
                 assert(x * *initSolution == x.b);
                 return optional(solve(*initSolution));
@@ -46,6 +45,7 @@ namespace solver {
             // This means we can improve our initial solution with a fix-point algorithm.
             for (bool changed = true; changed;) {
                 changed = false;
+                dout << "Starting augmentation step" << std::endl;
 
                 // After ever augmentation step we should have Ay = 0 for the result of the augmentation step.
                 // This means that we still have A(z0 + y) = b.
@@ -57,6 +57,7 @@ namespace solver {
                 assert(x * nextCandidate == x.b);
 
                 if (T currWeight = nextCandidate.dot(x.c); currWeight > z0.dot(x.c)) {
+                    dout << dvar(currWeight) << std::endl;
                     z0 = nextCandidate;
                     changed = true;
 
@@ -133,6 +134,7 @@ namespace solver {
         }
 
         graphLayer processBlock(size_t block, graphLayer curr, const Vec<T> &l, const Vec<T> &u) {
+            dout << dvar(block, SZ(curr)) << std::endl;
             Vec<T> zero = Vec<T>::Zero(x.r + x.s);
 
             Mat<T> M(x.r + x.s, x.t);
@@ -170,9 +172,11 @@ namespace solver {
             return curr;
         }
 
-        optional<Vec<T>> findInitSol() {
+        // Finds an initial solution to an NFold instance or reports
+        // that none exists.
+        static optional<Vec<T>> findInitSol(NFold<T>& x) {
             auto[aInit, initSol] = constructAInit(x);
-            auto[sol, weight] = Solver(aInit).solve(initSol, 0);
+            auto[sol, weight] = Solver<T>(aInit).solve(initSol, 0);
 
             if(!weight) {
                 // Solution found.
@@ -188,6 +192,68 @@ namespace solver {
                 // No solution exists.
                 return nullopt;
             }
+        }
+
+        // Constructs an nFold as described by Jansens paper in chapter 4.
+        // This is used to find an initial solution for the original input nfold.
+        static std::pair<NFold<T>, Vec<T>> constructAInit(const NFold<T>& x) {
+            const int n = x.n, r = x.r, s = x.s, t = x.t;
+
+            NFold<T> res(n, r, s, t + r + s);
+
+            //Construct new matrix
+            F0R(i, n) {
+                res.as[i].block(0, 0,     r, t) = x.as[i];
+                if(!i) res.as[i].block(0, t, r, r).setIdentity();
+                else   res.as[i].block(0, t, r, r).setZero();
+                res.as[i].block(0, t + r, r, s).setZero();
+
+                res.bs[i].block(0, 0,     s, t) = x.bs[i];
+                res.bs[i].block(0, t,     s, r).setZero();
+                res.bs[i].block(0, t + r, s, s).setIdentity();
+            }
+
+            // Construct new righthand side
+            res.b = x.b - x*x.l;
+
+            // Construct upper and lower bound
+            F0R(i, n) {
+                res.l.segment(i*(t + r + s), t) = (x.u - x.l).segment(i*t, t);
+                res.u.segment(i*(t + r + s), t) = (x.u - x.l).segment(i*t, t);
+                if(!i) {
+                    res.l.segment(i*(t + r + s) + t, r) = res.b.segment(0, r);
+                    res.u.segment(i*(t + r + s) + t, r) = res.b.segment(0, r);
+                } else {
+                    res.l.segment(i*(t + r + s) + t, r).setZero();
+                    res.u.segment(i*(t + r + s) + t, r).setZero();
+                }
+                res.l.segment(i*(t + r + s) + t + r, s) = res.b.segment(r + i*s, s);
+                res.u.segment(i*(t + r + s) + t + r, s) = res.b.segment(r + i*s, s);
+            }
+            res.l = res.l.array().min(0);
+            res.u = res.u.array().max(0);
+
+            // Construct cost vector
+            res.c.setZero();
+            res.c.segment(t, r).setOnes();
+            F0R(j, r) // Identity matrix for A_1
+                if(res.b(j) >= 0)
+                    res.c(t + j) = -1;
+            F0R(i, n) { // Identity matrix for B_i
+                res.c.segment(t + r + i*(t + r + s), s).setOnes();
+                F0R(j, s)
+                    if(res.b(r + i*s + j) >= 0)
+                        res.c(t + r + i*(t + r + s) + j) = -1;
+            }
+
+            // Construct init sol
+            Vec<T> initSol = Vec<T>::Zero((t + r + s)*n);
+            initSol.segment(t, r) = res.b.segment(0, r);
+            F0R(i, n) {
+                initSol.segment((t + r + s)*i + t + r, s) = res.b.segment(r + i*s, s);
+            }
+
+            return std::make_pair(res, initSol);
         }
     };
 } // namespace solver
