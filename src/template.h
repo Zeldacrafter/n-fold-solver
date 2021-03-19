@@ -1,7 +1,9 @@
 #ifndef NFOLD_TEMPLATE_H
 #define NFOLD_TEMPLATE_H
 
+#ifdef USING_BOOST
 #include <boost/stacktrace.hpp>
+#endif
 #include <Eigen/Dense>
 #include <iostream>
 #include <string>
@@ -78,7 +80,10 @@ template <typename T> std::false_type const_iterator_check(...);
 template <typename T> struct IsC : decltype(const_iterator_check<T>(nullptr)) {};
 // No new input/output for string as those already exist.
 template <> struct IsC<std::string> : std::false_type {};
+template <typename U, int S> struct IsC<sVec<U, S>> : std::false_type {};
+#ifdef USING_BOOST
 template <> struct IsC<boost::stacktrace::stacktrace> : std::false_type {};
+#endif
 
 ///////////////////////////////////////////////////////////////
 // Begin Output
@@ -179,7 +184,7 @@ struct PP {
     // Index of next seperator.
     size_t idx;
     PP(const T& value, std::shared_ptr<std::array<std::string, N>> p, size_t i = 0)
-            : v{value}, se{p}, idx{i} {}
+            : v{value}, se{p}, idx{i} { }
 };
 
 // If a value is not a pair, tuple or std-library-continer just print it.
@@ -233,18 +238,18 @@ std::ostream& operator<<(std::ostream& o, const PP<Vec<K>, M>& p) {
     return o << '>';
 }
 
-template <typename K, size_t M, size_t S>
+template <typename K, size_t M, int S>
 std::ostream& operator<<(std::ostream& o, const PP<const sVec<K, S>, M>& p) {
     const std::string& sep = p.idx < M ? (*p.se)[p.idx] : " ";
     o << '<';
-    F0R (i, S) {
+    F0R (i, static_cast<size_t>(p.v.size())) {
         if (i) o << sep;
         o << p.v(i);
     }
     return o << '>';
 }
 
-template <typename K, size_t M, size_t S>
+template <typename K, size_t M, int S>
 std::ostream& operator<<(std::ostream& o, const PP<sVec<K, S>, M>& p) {
     const std::string& sep = p.idx < M ? (*p.se)[p.idx] : " ";
     o << '<';

@@ -1,18 +1,24 @@
+#ifdef USING_BOOST
 #include <signal.h>
 #include <boost/stacktrace.hpp>
+#endif
 
 #include "src/template.h"
 #include "src/bruteforce.cpp"
 #include "src/solver_class.cpp"
 
+#ifdef USING_BOOST
 void handler(int) {
     std::cerr << boost::stacktrace::stacktrace() << std::endl;
     _exit(1);
 }
+#endif
 
 int main(int argc, char* argv[]) {
+#ifdef USING_BOOST
     ::signal(SIGABRT, handler);
     ::signal(SIGSEGV, handler);
+#endif
     using namespace std;
 
     // No args or first arg starts with 'n':

@@ -208,7 +208,7 @@ namespace static_solver {
         ////////////////////////////
 
         // Finds an initial solution to an NFold instance or reports
-        // that None eSts.
+        // that none exists.
         static optional<sVec<U, N*T>> findInitSol(StaticNFold<U, N, R, S, T>& x) {
             auto [aInit, initSol] = constructAInit(x);
             auto [sol, weight] = StaticSolver<U, N, R, S, T + R + S>(aInit).solve(initSol, 0);

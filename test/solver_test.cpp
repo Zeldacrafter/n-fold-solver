@@ -38,9 +38,8 @@ INSTANTIATE_TEST_CASE_P(
         BruteForceTests,
         SolverFixture,
         ::testing::Values(
-                "input/max-small",
-                "input/max-large",
-                "input/input-huge",
-                "input/modified_knapsack/small"
+                "input/max/max-small",
+                "input/max/max-large",
+                "input/max/input-huge"
         )
 );
