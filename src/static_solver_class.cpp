@@ -150,7 +150,7 @@ namespace static_solver {
 
         template<int BLOCK>
         std::enable_if_t<BLOCK == N, sVec<U, N*T>>
-        solveAugIp(sVec<U, N*T>&, sVec<U, N*T>&, graphLayer<BLOCK*T> curr) {
+        solveAugIp(const sVec<U, N*T>&, const sVec<U, N*T>&, graphLayer<BLOCK*T> curr) {
             // If we are at block N we are done.
             // There are no more blocks to process and we can just return.
             assert(curr.count(sVec<U, R + S>::Zero()));
@@ -197,7 +197,9 @@ namespace static_solver {
 
         template<int BLOCK, int COL>
         std::enable_if_t<COL == T, graphLayer<BLOCK*T + T>>
-        processSubBlocks(graphLayer<BLOCK*T + COL> curr, sVec<U, N*T>&, sVec<U, N*T>&, sMat<U, R + S, T>&) {
+        processSubBlocks(graphLayer<BLOCK*T + COL> curr,
+                         const sVec<U, N*T>&, const sVec<U, N*T>&,
+                         const sMat<U, R + S, T>&) {
             return curr;
         }
 
@@ -287,5 +289,4 @@ namespace static_solver {
             return std::make_pair(res, initSol);
         }
     };
-
 } // Namespace solver
