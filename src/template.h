@@ -13,6 +13,11 @@ using Mat = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
 template<typename T>
 using Vec = Eigen::Matrix<T, Eigen::Dynamic, 1>;
 
+template<typename T, int S1, int S2>
+using sMat = Eigen::Matrix<T, S1, S2>;
+template<typename T, int S1>
+using sVec = Eigen::Matrix<T, S1, 1>;
+
 #define DEBUG 1
 
 // https://google.github.io/styleguide/cppguide.html#Template_metaprogramming
@@ -219,13 +224,35 @@ std::ostream& operator<<(std::ostream& o, const PP<const Vec<K>, M>& p) {
 
 template <typename K, size_t M>
 std::ostream& operator<<(std::ostream& o, const PP<Vec<K>, M>& p) {
-const std::string& sep = p.idx < M ? (*p.se)[p.idx] : " ";
-o << '<';
-F0R (i, static_cast<size_t>(p.v.size())) {
-if (i) o << sep;
-o << p.v(i);
+    const std::string& sep = p.idx < M ? (*p.se)[p.idx] : " ";
+    o << '<';
+    F0R (i, static_cast<size_t>(p.v.size())) {
+        if (i) o << sep;
+        o << p.v(i);
+    }
+    return o << '>';
 }
-return o << '>';
+
+template <typename K, size_t M, size_t S>
+std::ostream& operator<<(std::ostream& o, const PP<const sVec<K, S>, M>& p) {
+    const std::string& sep = p.idx < M ? (*p.se)[p.idx] : " ";
+    o << '<';
+    F0R (i, S) {
+        if (i) o << sep;
+        o << p.v(i);
+    }
+    return o << '>';
+}
+
+template <typename K, size_t M, size_t S>
+std::ostream& operator<<(std::ostream& o, const PP<sVec<K, S>, M>& p) {
+    const std::string& sep = p.idx < M ? (*p.se)[p.idx] : " ";
+    o << '<';
+    F0R (i, S) {
+        if (i) o << sep;
+        o << p.v(i);
+    }
+    return o << '>';
 }
 
 // Print std-library-container with the specified seperator.

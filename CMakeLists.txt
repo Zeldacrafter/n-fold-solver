@@ -23,6 +23,7 @@ add_link_options(-ldl -lbacktrace)
 add_compile_options(-Wall -Wextra -pedantic -Wno-ignored-qualifiers)
 add_compile_options(-Ofast)
 
+add_compile_options(-DN_NFOLD=1 -DR_NFOLD=1 -DS_NFOLD=1 -DT_NFOLD=1)
 if (MY_DEBUG)
     add_compile_options(-g -fsanitize=address -fsanitize=undefined)
     add_link_options(-fsanitize=address -fsanitize=undefined)
@@ -33,7 +34,7 @@ endif(MY_DEBUG)
 # Configure Main Module    #
 ############################
 
-set(SOURCE_FILES main.cpp)
+set(SOURCE_FILES main.cpp static_main.cpp)
 add_executable(${NAME_MAIN} ${SOURCE_FILES})
 
 include_directories(src)

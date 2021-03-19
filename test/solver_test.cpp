@@ -40,6 +40,7 @@ INSTANTIATE_TEST_CASE_P(
         ::testing::Values(
                 "input/max-small",
                 "input/max-large",
-                "input/input-huge"
+                "input/input-huge",
+                "input/modified_knapsack/small"
         )
 );
