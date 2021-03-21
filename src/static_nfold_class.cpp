@@ -5,7 +5,6 @@
 
 #include "template.h"
 
-
 template<typename U, int S>
 std::istream& operator>>(std::istream& inp, sVec<U, S>& x) {
     F0R(i, SZ(x)) inp >> x(i);

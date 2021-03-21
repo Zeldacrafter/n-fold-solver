@@ -50,13 +50,19 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    cout << "Input:\n" << nfold << endl;
+    //cout << "Input:\n" << nfold << endl;
 
-    auto [res, resWgt] =
-    normal ? *static_solver::StaticSolver<int, N_NFOLD, R_NFOLD, S_NFOLD, T_NFOLD>(nfold).solve()
-           :  static_solver::StaticSolver<int, N_NFOLD, R_NFOLD, S_NFOLD, T_NFOLD>(nfold).solve(initSol);
-
-    cout << "Solution found:\n" << dvar(pp(res), resWgt) << endl;
+    if(normal) {
+        auto maybeRes = static_solver::StaticSolver<int, N_NFOLD, R_NFOLD, S_NFOLD, T_NFOLD>(nfold).solve();
+        if(maybeRes) {
+            cout << (*maybeRes).second << std::endl << pp((*maybeRes).first);
+        } else {
+            cout << "No solution exists";
+        }
+    } else {
+        auto res = static_solver::StaticSolver<int, N_NFOLD, R_NFOLD, S_NFOLD, T_NFOLD>(nfold).solve(initSol);
+        cout << res.second << std::endl << pp(res.first);
+    }
     return 0;
 #endif
 }

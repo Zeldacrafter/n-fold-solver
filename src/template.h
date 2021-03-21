@@ -38,9 +38,9 @@ bool ckmax(T& a, const T& b) { return a < b && (a = b, true); }
 #ifndef DEBUG
 #define DEBUG 0
 #endif
-#define dout if (DEBUG) std::cout
+#define dout if (DEBUG) std::cerr
 // Output all passed variables with their corresponding name and value.
-#define dvarimpl(...) mkDB(#__VA_ARGS__, __VA_ARGS__) << "\033[0m "
+#define dvarimpl(...) mkDB(#__VA_ARGS__, __VA_ARGS__) << " "
 #define dvar(...) " " << dvarimpl(__VA_ARGS__)
 #define dvarr(...) " \033[31m" << dvarimpl(__VA_ARGS__)
 #define dvarb(...) " \033[34m" << dvarimpl(__VA_ARGS__)
