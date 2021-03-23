@@ -36,3 +36,4 @@ a.out
 
 cmake-build-*/
 .idea/
+*-*.out

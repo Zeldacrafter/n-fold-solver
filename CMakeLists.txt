@@ -34,7 +34,7 @@ endif(MY_DEBUG)
 # Configure Main Module    #
 ############################
 
-set(SOURCE_FILES main.cpp static_main.cpp)
+set(SOURCE_FILES main.cpp)
 add_executable(${NAME_MAIN} ${SOURCE_FILES})
 
 include_directories(src)

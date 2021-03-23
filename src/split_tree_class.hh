@@ -1,4 +1,5 @@
-#include "template.h"
+#pragma once
+#include "template.hh"
 
 template <typename U>
 class Node {
@@ -6,8 +7,8 @@ public:
     const static size_t NO_PARENT = std::numeric_limits<size_t>::max();
 
     U val;
-    int childrenCnt;
     size_t parentIdx;
+    int childrenCnt;
 
     Node(U _val, size_t pIdx) : val{_val}, parentIdx{pIdx}, childrenCnt{U(0)} {}
 };
@@ -36,7 +37,7 @@ public:
         }
     }
 
-    void remove(int index) {
+    void remove(size_t index) {
         assert(SZ(tree) > index);
         freeIndices.push_back(index);
         if(tree[index].parentIdx != Node<U>::NO_PARENT) {
@@ -47,13 +48,13 @@ public:
         }
     }
 
-    std::vector<U> constructPath(int idx) {
-        assert(idx < SZ(tree));
+    std::vector<U> constructPath(size_t index) {
+        assert(index < SZ(tree));
 
         std::vector<U> res;
-        while(tree[idx].parentIdx != Node<U>::NO_PARENT) {
-            res.push_back(tree[idx].val);
-            idx = tree[idx].parentIdx;
+        while(tree[index].parentIdx != Node<U>::NO_PARENT) {
+            res.push_back(tree[index].val);
+            index = tree[index].parentIdx;
         }
         std::reverse(ALL(res));
 

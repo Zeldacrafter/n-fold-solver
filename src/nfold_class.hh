@@ -3,7 +3,7 @@
 #include <Eigen/StdVector>
 #include <tsl/hopscotch_hash.h>
 
-#include "template.h"
+#include "template.hh"
 
 template<typename U, int S>
 std::istream& operator>>(std::istream& inp, sVec<U, S>& x) {

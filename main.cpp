@@ -3,9 +3,8 @@
 #include <boost/stacktrace.hpp>
 #endif
 
-#include "src/template.h"
-#include "src/bruteforce.cpp"
-#include "src/solver_class.cpp"
+#include "src/template.hh"
+#include "src/solver_class.hh"
 
 #ifdef USING_BOOST
 void handler(int) {
@@ -15,6 +14,10 @@ void handler(int) {
 #endif
 
 int main(int argc, char* argv[]) {
+#if not defined(N_NFOLD) || not defined(R_NFOLD) || not defined(S_NFOLD) || not defined(T_NFOLD)
+    std::cout << "Variables N_NFOLD, R_NFOLD, S_NFOLD and T_NFOLD must be set at compile-time." << std::endl;
+    exit(1);
+#else
 #ifdef USING_BOOST
     ::signal(SIGABRT, handler);
     ::signal(SIGSEGV, handler);
@@ -29,8 +32,12 @@ int main(int argc, char* argv[]) {
 
     int n, r, s, t;
     cin >> n >> r >> s >> t;
+    assert(N_NFOLD == n);
+    assert(R_NFOLD == r);
+    assert(S_NFOLD == s);
+    assert(T_NFOLD == t);
 
-    NFold<int> nfold(n, r, s, t);
+    StaticNFold<int, N_NFOLD, R_NFOLD, S_NFOLD, T_NFOLD> nfold;
     Vec<int> initSol(n*t);
     if(normal) {
         cin >> nfold;
@@ -42,12 +49,20 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    cout << "Input:\n" << nfold << endl;
+    //cout << "Input:\n" << nfold << endl;
 
-    auto [res, resWgt] = 
-        normal ? *solver::Solver(nfold).solve()
-               :  solver::Solver(nfold).solve(initSol);
-
-    cout << "Solution found:\n" << dvar(pp(res), resWgt) << endl;
+    if(normal) {
+        auto maybeRes = static_solver::StaticSolver<int, N_NFOLD, R_NFOLD, S_NFOLD, T_NFOLD>(nfold).solve();
+        if(maybeRes) {
+            cout << (*maybeRes).second << std::endl << pp((*maybeRes).first);
+        } else {
+            cout << "No solution exists";
+            return 1;
+        }
+    } else {
+        auto res = static_solver::StaticSolver<int, N_NFOLD, R_NFOLD, S_NFOLD, T_NFOLD>(nfold).solve(initSol);
+        cout << res.second << std::endl << pp(res.first);
+    }
     return 0;
+#endif
 }

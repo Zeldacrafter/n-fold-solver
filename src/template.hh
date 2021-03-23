@@ -1,5 +1,5 @@
-#ifndef NFOLD_TEMPLATE_H
-#define NFOLD_TEMPLATE_H
+#ifndef NFOLD_TEMPLATE_HH
+#define NFOLD_TEMPLATE_HH
 
 #ifdef USING_BOOST
 #include <boost/stacktrace.hpp>
@@ -27,7 +27,7 @@ using sVec = Eigen::Matrix<T, S1, 1>;
 // successfully ignored
 #define ALL(x) (x).begin(), (x).end()
 #define RALL(x) (x).rbegin(), (x).rend()
-#define SZ(x) (int)(x).size()
+#define SZ(x) (x).size()
 #define FOR(a, b, c) for (auto a = (b); (a) < (c); ++(a))
 #define F0R(a, b) FOR (a, static_cast<decltype(b)>(0), (b))
 template <typename T>
@@ -310,4 +310,4 @@ std::enable_if_t<IsC<T>::value, std::istream&> operator>>(std::istream& i, T& v)
     return i;
 }
 
-#endif //NFOLD_TEMPLATE_H
+#endif //NFOLD_TEMPLATE_HH

@@ -2,15 +2,18 @@
 
 #include <map>
 #include <boost/container_hash/hash.hpp>
-#include <tsl/hopscotch_map.h>
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wshadow"
+#include "../third-party/hopscotch-map/include/tsl/hopscotch_map.h"
+#pragma GCC diagnostic pop
 #include <stack>
 
-#include "static_nfold_class.cpp"
-#include "split_tree_class.cpp"
+#include "nfold_class.hh"
+#include "split_tree_class.hh"
 
 // TODO: https://google.github.io/styleguide/cppguide.html#std_hash
 template <typename K, int S>
-struct std::hash<sVec<K, S>> {
+struct staticVectorHash {
     size_t operator()(const sVec<K, S>& v) const {
         return boost::hash_range(v.data(), v.data() + v.size());
     }
@@ -91,7 +94,7 @@ namespace static_solver {
         using graphLayer = tsl::hopscotch_map<
                 sVec<U, R + S>,
                 std::pair<U, size_t>,
-                std::hash<sVec<U, R + S>>,
+                staticVectorHash<U, R + S>,
                 std::equal_to<sVec<U, R + S>>,
                 Eigen::aligned_allocator<std::pair<sVec<U, R + S>, std::pair<U, size_t>>>>;
 
