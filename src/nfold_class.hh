@@ -1,23 +1,10 @@
-#pragma once
+#ifndef N_FOLD_NFOLD_CLASS_HH
+#define N_FOLD_NFOLD_CLASS_HH
 
 #include <Eigen/StdVector>
 #include <tsl/hopscotch_hash.h>
 
-#include "template.hh"
-
-template<typename U, int S>
-std::istream& operator>>(std::istream& inp, sVec<U, S>& x) {
-    F0R(i, SZ(x)) inp >> x(i);
-    return inp;
-}
-
-template<typename T, int S1, int S2>
-std::istream& operator>>(std::istream& inp, sMat<T, S1, S2>& x) {
-    F0R(r, x.rows())
-        F0R(c, x.cols())
-            inp >> x(r, c);
-    return inp;
-}
+#include "utils.hh"
 
 template<typename U, int N, int R, int S, int T>
 class StaticNFold {
@@ -49,26 +36,39 @@ public:
     // multiplication with a column vector
     sVec<U, R + N*S> operator*(const sVec<U, N*T>& x) const {
         sVec<U, R + N*S> res = sVec<U, R + N*S>::Zero();
-        F0R(i, N) res.head(R) += as[i] * x.segment(i * T, T);
-        F0R(i, N) res.segment(R + i*S, S) = bs[i] * x.segment(i * T, T);
+        for(int i = 0; i < N; ++i) {
+            res.head(R) += as[i] * x.segment(i * T, T);
+            res.segment(R + i*S, S) = bs[i] * x.segment(i * T, T);
+        }
         return res;
     }
 
     friend std::ostream& operator<<(std::ostream& outp, StaticNFold<U, N, R, S, T> x) {
-        outp << dvar(N, R, S, T) << std::endl
-             << dvar(pp(x.l), pp(x.u)) << std::endl
-             << dvar(pp(x.c), pp(x.b)) << std::endl
+        outp << "n: " << N << ", r: " << R << ", s: " << S << ", t: " << T << std::endl
+             << "l: " << x.l << std::endl
+             << "u: " << x.u << std::endl
+             << "c: " << x.c << std::endl
+             << "b: " << x.b << std::endl
              << "A:" << std::endl;
-        F0R(rr, R + N*S) {
-            F0R(cc, N*T)
+        for(int rr = 0; rr < R + N*S; ++rr) {
+            for(int cc = 0; cc < N*T; ++cc) {
                 outp << x(rr, cc) << ' ';
+            }
             outp << std::endl;
         }
         return outp;
     }
 
     friend std::istream& operator>>(std::istream& inp, StaticNFold<U, N, R, S, T>& x) {
-        return inp >> x.l >> x.u >> x.b >> x.c >> x.as >> x.bs;
+        inp >> x.l >> x.u >> x.b >> x.c;
+        for(int i = 0; i < x.as.size(); ++i) {
+            inp >> x.as[i];
+        }
+        for(int i = 0; i < x.bs.size(); ++i) {
+            inp >> x.bs[i];
+        }
+        return inp;
     }
 };
 
+#endif //N_FOLD_NFOLD_CLASS_HH
