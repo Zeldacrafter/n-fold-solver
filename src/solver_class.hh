@@ -10,7 +10,6 @@
 
 #include "utils.hh"
 #include "nfold_class.hh"
-#include "split_tree_class.hh"
 
 /* TODO: What do we do about L_A? It is supposed to be a upper bound on our solution.
  *       But since L_A is very large any input that would benefit from it would Not
@@ -77,23 +76,19 @@ public:
 private:
 
     StaticNFold<U, N, R, S, T> x;
-    SplitTree<U> nodes;
 
     using graphLayer = tsl::hopscotch_map<
             sVec<U, R + S>,
-            std::pair<U, size_t>,
+            std::pair<U, Vec<U>>,
             utils::staticVectorHash<U, R + S>,
             std::equal_to<sVec<U, R + S>>,
-            Eigen::aligned_allocator<std::pair<sVec<U, R + S>, std::pair<U, size_t>>>>;
+            Eigen::aligned_allocator<std::pair<sVec<U, R + S>, std::pair<U, Vec<U>>>>>;
 
     std::optional<sVec<U, N*T>> solveAugIp(const sVec<U, N*T> &l, const sVec<U, N*T> &u) {
-        nodes.clear();
         sVec<U, R + S> zero = sVec<U, R + S>::Zero();
 
         graphLayer curr;
-        int startIndex = nodes.add(U(0), SplitTree<U>::NO_PARENT);
-        assert(startIndex == 0);
-        curr[zero] = std::make_pair(U(0), startIndex);
+        curr[zero] = std::make_pair(U(0), Vec<U>(0));
 
         for(int block = 0; block < N; ++block) {
 
@@ -104,8 +99,8 @@ private:
                 size_t yPos = block*T + col;
 
                 graphLayer next;
-                for (const auto& [oldPos, wgtAndIdx] : curr) {
-                    auto& [wgt, idx] = wgtAndIdx;
+                for (const auto& [oldPos, wgtAndVec] : curr) {
+                    auto& [wgt, oldVec] = wgtAndVec;
                     int amtFound = 0;
                     for(int y = l(yPos); y <= u(yPos); ++y) {
                         sVec<U, R + S> candidate = y * M.col(col) + oldPos;
@@ -118,22 +113,12 @@ private:
                             // We only add an edge if there is no other edge to that node (yet)
                             // or the new path to that node has a higher total weight. (longest path)
 
-                            if(auto ptr = next.find(candidate);
-                                    ptr == next.end() || ptr->second.first < candidateWeight) {
-                                if (ptr != next.end()) {
-                                    // We already have an element at that position.
-                                    nodes.remove(ptr->second.second);
-                                }
-                                int insertionIndex = nodes.add(y, idx);
-                                next[candidate] = std::make_pair(candidateWeight, insertionIndex);
-                                amtFound++;
+                            if(!next.count(candidate) || next[candidate].first < candidateWeight) {
+                                Vec<U> newVec(oldVec.size() + 1);
+                                newVec << oldVec, y;
+                                next[candidate] = std::make_pair(candidateWeight, newVec);
                             }
                         }
-                    }
-
-                    // If this is a dead end we can just remove the node and free up space.
-                    if(!amtFound) {
-                        nodes.remove(idx);
                     }
                 }
 
@@ -143,9 +128,7 @@ private:
         }
 
         if(curr.size()) {
-            std::vector<U> path = nodes.constructPath(curr[zero].second);
-            assert(path.size() == N*T);
-            return sVec<U, N*T>(path.data());
+            return curr[zero].second;
         } else {
             return std::nullopt;
         }
