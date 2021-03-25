@@ -10,12 +10,7 @@
 
 #include "utils.hh"
 #include "nfold_class.hh"
-#include "split_tree_class.hh"
-
-/* TODO: What do we do about L_A? It is supposed to be a upper bound on our solution.
- *       But since L_A is very large any input that would benefit from it would Not
- *       terminate before the heat death of the universe.
- */
+#include "prefix_tree_class.hh"
 
 template <typename U>
 class n_fold_solver {
@@ -80,7 +75,7 @@ public:
 private:
 
     n_fold<U> x;
-    SplitTree<U> nodes;
+    prefix_tree<U> nodes;
 
     using graphLayer = tsl::hopscotch_map<
             Vec<U>,
@@ -94,7 +89,7 @@ private:
         Vec<U> zero = Vec<U>::Zero(R + S);
 
         graphLayer curr;
-        int startIndex = nodes.add(U(0), SplitTree<U>::NO_PARENT);
+        int startIndex = nodes.add(U(0), prefix_tree<U>::NO_PARENT);
         assert(startIndex == 0);
         curr[zero] = std::make_pair(U(0), startIndex);
 

@@ -1,26 +1,25 @@
-#ifndef N_FOLD_SPLIT_TREE_CLASS_HH
-#define N_FOLD_SPLIT_TREE_CLASS_HH
+#ifndef N_FOLD_PREFIX_TREE_CLASS_HH
+#define N_FOLD_PREFIX_TREE_CLASS_HH
 
 #include <iostream>
 
 #include "utils.hh"
 
 template <typename U>
-class SplitTree {
+class prefix_tree {
   private:
-    class Node {
-    public:
+    struct node {
         U val;
         size_t parentIdx;
         int childrenCnt;
 
-        Node(U _val, size_t pIdx) : val{_val}, parentIdx{pIdx}, childrenCnt{U(0)} {}
+        node(U _val, size_t pIdx) : val{_val}, parentIdx{pIdx}, childrenCnt{U(0)} {}
     };
 
   public:
     const static size_t NO_PARENT = std::numeric_limits<size_t>::max();
 
-    std::vector<Node> tree;
+    std::vector<node> tree;
     std::vector<size_t> freeIndices;
 
     int add(U value, size_t parInd) {
@@ -33,7 +32,7 @@ class SplitTree {
         if(freeIndices.size()) {
             int idx = freeIndices.back();
             freeIndices.pop_back();
-            tree[idx] = Node(value, parInd);
+            tree[idx] = node(value, parInd);
             return idx;
         } else {
             tree.emplace_back(value, parInd);
@@ -71,4 +70,4 @@ class SplitTree {
     }
 };
 
-#endif //N_FOLD_SPLIT_TREE_CLASS_HH
+#endif //N_FOLD_PREFIX_TREE_CLASS_HH
