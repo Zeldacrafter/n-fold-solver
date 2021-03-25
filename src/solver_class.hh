@@ -11,15 +11,10 @@
 #include "utils.hh"
 #include "nfold_class.hh"
 
-/* TODO: What do we do about L_A? It is supposed to be a upper bound on our solution.
- *       But since L_A is very large any input that would benefit from it would Not
- *       terminate before the heat death of the universe.
- */
-
 template <typename U, int N, int R, int S, int T>
-class StaticSolver {
+class n_fold_solver {
 public:
-    explicit StaticSolver(StaticNFold<U, N, R, S, T>& _x) : x{_x} { }
+    explicit n_fold_solver(n_fold<U, N, R, S, T>& _x) : x{_x} { }
 
     std::optional<std::pair<sVec<U, N*T>, U>> solve() {
         std::optional<sVec<U, N*T>> initSolution = findInitSol(x);
@@ -75,7 +70,7 @@ public:
 
 private:
 
-    StaticNFold<U, N, R, S, T> x;
+    n_fold<U, N, R, S, T> x;
 
     using graphLayer = tsl::hopscotch_map<
             sVec<U, R + S>,
@@ -140,9 +135,9 @@ private:
 
     // Finds an initial solution to an NFold instance or reports
     // that none exists.
-    static std::optional<sVec<U, N*T>> findInitSol(StaticNFold<U, N, R, S, T>& x) {
+    static std::optional<sVec<U, N*T>> findInitSol(n_fold<U, N, R, S, T>& x) {
         auto [aInit, initSol] = constructAInit(x);
-        auto [sol, weight] = StaticSolver<U, N, R, S, T + R + S>(aInit).solve(initSol, 0);
+        auto [sol, weight] = n_fold_solver<U, N, R, S, T + R + S>(aInit).solve(initSol, 0);
 
         if(!weight) {
             // Solution found.
@@ -162,9 +157,9 @@ private:
 
     // Constructs an NFold as described by Jansens paper in chapter 4.
     // This is used to find an initial solution for the original input Nfold.
-    static std::pair<StaticNFold<U, N, R, S, T + R + S>, sVec<U, N * (T + R + S)>>
-    constructAInit(const StaticNFold<U, N, R, S, T>& x) {
-        StaticNFold<U, N, R, S, T + R + S> res;
+    static std::pair<n_fold<U, N, R, S, T + R + S>, sVec<U, N * (T + R + S)>>
+    constructAInit(const n_fold<U, N, R, S, T>& x) {
+        n_fold<U, N, R, S, T + R + S> res;
 
         //Construct New matrix
         for(int i = 0; i < N; ++i) {
