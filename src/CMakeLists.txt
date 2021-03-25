@@ -4,7 +4,7 @@ set(HEADER_FILES
         utils.hh
         nfold_class.hh
         solver_class.hh
-        split_tree_class.hh)
+        prefix_tree_class.hh)
 
 set(SOURCE_FILES main.cpp)
 

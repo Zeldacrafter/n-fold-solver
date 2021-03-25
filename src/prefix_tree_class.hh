@@ -1,12 +1,12 @@
-#ifndef N_FOLD_SPLIT_TREE_CLASS_HH
-#define N_FOLD_SPLIT_TREE_CLASS_HH
+#ifndef N_FOLD_PREFIX_TREE_CLASS_HH
+#define N_FOLD_PREFIX_TREE_CLASS_HH
 
 #include <iostream>
 
 #include "utils.hh"
 
 template <typename U>
-class SplitTree {
+class prefix_tree {
   private:
     class Node {
     public:
@@ -71,4 +71,4 @@ class SplitTree {
     }
 };
 
-#endif //N_FOLD_SPLIT_TREE_CLASS_HH
+#endif //N_FOLD_PREFIX_TREE_CLASS_HH

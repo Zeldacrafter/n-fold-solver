@@ -7,14 +7,14 @@
 #include "utils.hh"
 
 template<typename U, int N, int R, int S, int T>
-class StaticNFold {
+class n_fold {
 public:
     sVec<U, N*T> l, u, c;
     sVec<U, R + N*S> b;
     std::array<sMat<U, R, T>, N> as;
     std::array<sMat<U, S, T>, N> bs;
 
-    StaticNFold() = default;
+    n_fold() = default;
 
     // Function call operator accesses the matrix element in that position.
     U operator()(size_t row, size_t col) {
@@ -43,7 +43,7 @@ public:
         return res;
     }
 
-    friend std::ostream& operator<<(std::ostream& outp, StaticNFold<U, N, R, S, T> x) {
+    friend std::ostream& operator<<(std::ostream& outp, n_fold<U, N, R, S, T> x) {
         outp << "n: " << N << ", r: " << R << ", s: " << S << ", t: " << T << std::endl
              << "l: " << x.l << std::endl
              << "u: " << x.u << std::endl
@@ -59,7 +59,7 @@ public:
         return outp;
     }
 
-    friend std::istream& operator>>(std::istream& inp, StaticNFold<U, N, R, S, T>& x) {
+    friend std::istream& operator>>(std::istream& inp, n_fold<U, N, R, S, T>& x) {
         inp >> x.l >> x.u >> x.b >> x.c;
         for(int i = 0; i < x.as.size(); ++i) {
             inp >> x.as[i];
