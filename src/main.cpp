@@ -1,25 +1,9 @@
-#ifdef USING_BOOST
-#include <signal.h>
-#include <boost/stacktrace.hpp>
-#endif
-
 #include <Eigen/Dense>
 
 #include "utils.hh"
 #include "solver_class.hh"
 
-#ifdef USING_BOOST
-void handler(int) {
-    std::cerr << boost::stacktrace::stacktrace() << std::endl;
-    _exit(1);
-}
-#endif
-
 int main(int argc, char* argv[]) {
-#ifdef USING_BOOST
-    ::signal(SIGABRT, handler);
-    ::signal(SIGSEGV, handler);
-#endif
     using namespace std;
 
     int n, r, s, t;
