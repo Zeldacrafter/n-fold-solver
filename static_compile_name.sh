@@ -1,5 +1,5 @@
 #!/usr/bin/bash
-local_opts="-I $(dirname $0)/third-party/hopscotch-map/include -I /usr/include/eigen3 -rdynamic -ldl -lbacktrace -DUSING_BOOST"
+local_opts="-I $(dirname $0)/third-party/hopscotch-map/include -I /usr/include/eigen3"
 compile_flags="-std=c++17 -Ofast -g" # -fsanitize=address" # -fsanitize=undefined"
 
 if [ "$#" -eq 5 ]; then
