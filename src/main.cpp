@@ -39,7 +39,7 @@ int main(int argc, char* argv[]) {
     assert(S_NFOLD == s);
     assert(T_NFOLD == t);
 
-    StaticNFold<int, N_NFOLD, R_NFOLD, S_NFOLD, T_NFOLD> nfold;
+    StaticNFold<int> nfold(n, r, s, t);
     Vec<int> initSol(n*t);
     if(normal) {
         cin >> nfold;
@@ -54,7 +54,7 @@ int main(int argc, char* argv[]) {
     //cout << "Input:\n" << nfold << endl;
 
     if(normal) {
-        auto maybeRes = StaticSolver<int, N_NFOLD, R_NFOLD, S_NFOLD, T_NFOLD>(nfold).solve();
+        auto maybeRes = StaticSolver<int>(nfold).solve();
         if(maybeRes) {
             cout << (*maybeRes).second << std::endl << (*maybeRes).first;
         } else {
@@ -62,7 +62,7 @@ int main(int argc, char* argv[]) {
             return 1;
         }
     } else {
-        auto res = StaticSolver<int, N_NFOLD, R_NFOLD, S_NFOLD, T_NFOLD>(nfold).solve(initSol);
+        auto res = StaticSolver<int>(nfold).solve(initSol);
         cout << res.second << std::endl << res.first;
     }
     return 0;

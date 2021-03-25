@@ -90,9 +90,9 @@ namespace utils {
      * @tparam K The type in the vector.
      * @tparam S The size of the vector.
      */
-    template <typename K, int S>
+    template <typename K>
     struct staticVectorHash {
-        size_t operator()(const sVec<K, S>& v) const {
+        size_t operator()(const Vec<K>& v) const {
             return boost::hash_range(v.data(), v.data() + v.size());
         }
     };

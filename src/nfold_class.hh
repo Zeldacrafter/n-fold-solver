@@ -6,15 +6,19 @@
 
 #include "utils.hh"
 
-template<typename U, int N, int R, int S, int T>
+template<typename U>
 class StaticNFold {
 public:
-    sVec<U, N*T> l, u, c;
-    sVec<U, R + N*S> b;
-    std::array<sMat<U, R, T>, N> as;
-    std::array<sMat<U, S, T>, N> bs;
+    size_t N, R, S, T;
+    Vec<U> l, u, c;
+    Vec<U> b;
+    std::vector<Mat<U>> as;
+    std::vector<Mat<U>> bs;
 
-    StaticNFold() = default;
+    StaticNFold(size_t n, size_t r, size_t s, size_t t) :
+        N{n}, R{r}, S{s}, T{t},
+        l(N*T), u(N*T), c(N*T), b(R + N*S),
+        as(N, Mat<U>(R, T)), bs(N, Mat<U>(S, T)) {};
 
     // Function call operator accesses the matrix element in that position.
     U operator()(size_t row, size_t col) {
@@ -34,8 +38,8 @@ public:
     }
 
     // multiplication with a column vector
-    sVec<U, R + N*S> operator*(const sVec<U, N*T>& x) const {
-        sVec<U, R + N*S> res = sVec<U, R + N*S>::Zero();
+    Vec<U> operator*(const Vec<U>& x) const {
+        Vec<U> res = Vec<U>::Zero(R + N*S);
         for(int i = 0; i < N; ++i) {
             res.head(R) += as[i] * x.segment(i * T, T);
             res.segment(R + i*S, S) = bs[i] * x.segment(i * T, T);
@@ -43,15 +47,15 @@ public:
         return res;
     }
 
-    friend std::ostream& operator<<(std::ostream& outp, StaticNFold<U, N, R, S, T> x) {
-        outp << "n: " << N << ", r: " << R << ", s: " << S << ", t: " << T << std::endl
+    friend std::ostream& operator<<(std::ostream& outp, StaticNFold<U> x) {
+        outp << "n: " << x.N << ", r: " << x.R << ", s: " << x.S << ", t: " << x.T << std::endl
              << "l: " << x.l << std::endl
              << "u: " << x.u << std::endl
              << "c: " << x.c << std::endl
              << "b: " << x.b << std::endl
              << "A:" << std::endl;
-        for(int rr = 0; rr < R + N*S; ++rr) {
-            for(int cc = 0; cc < N*T; ++cc) {
+        for(int rr = 0; rr < x.R + x.N*x.S; ++rr) {
+            for(int cc = 0; cc < x.N*x.T; ++cc) {
                 outp << x(rr, cc) << ' ';
             }
             outp << std::endl;
@@ -59,7 +63,7 @@ public:
         return outp;
     }
 
-    friend std::istream& operator>>(std::istream& inp, StaticNFold<U, N, R, S, T>& x) {
+    friend std::istream& operator>>(std::istream& inp, StaticNFold<U>& x) {
         inp >> x.l >> x.u >> x.b >> x.c;
         for(int i = 0; i < x.as.size(); ++i) {
             inp >> x.as[i];

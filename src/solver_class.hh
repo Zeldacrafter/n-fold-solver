@@ -17,13 +17,16 @@
  *       terminate before the heat death of the universe.
  */
 
-template <typename U, int N, int R, int S, int T>
+template <typename U>
 class StaticSolver {
 public:
-    explicit StaticSolver(StaticNFold<U, N, R, S, T>& _x) : x{_x} { }
+    size_t N, R, S, T;
+    explicit StaticSolver(StaticNFold<U>& _x)
+        : x{_x}, N(_x.N), R(_x.R), S(_x.S), T(_x.T)  {
+    }
 
-    std::optional<std::pair<sVec<U, N*T>, U>> solve() {
-        std::optional<sVec<U, N*T>> initSolution = findInitSol(x);
+    std::optional<std::pair<Vec<U>, U>> solve() {
+        std::optional<Vec<U>> initSolution = findInitSol(x);
         if (initSolution) {
             assert(x * *initSolution == x.b);
             return std::optional(solve(*initSolution));
@@ -32,11 +35,11 @@ public:
         }
     }
 
-    std::pair<sVec<U, N*T>, U> solve(const sVec<U, N*T> &initSolution,
+    std::pair<Vec<U>, U> solve(const Vec<U> &initSolution,
                                      const std::optional<U> knownBest = std::nullopt) {
         assert(x * initSolution == x.b);
 
-        sVec<U, N*T> z0 = initSolution;
+        Vec<U> z0 = initSolution;
         // As long as a better solution eSts it is guaranteed that we find one.
         // This means we can improve our initial solution with a fix-point algorithm.
         for (bool changed = true; changed;) {
@@ -45,15 +48,15 @@ public:
             // After ever augmentation step we should have Ay = 0 for the result of the augmentation step.
             // This means that we still have A(z0 + y) = b.
             //sVec<U, N*T> augRes = solveAugIp(x.l - z0, x.u - z0, startLayer);
-            std::optional<sVec<U, N*T>> augRes = solveAugIp(x.l - z0, x.u - z0);
+            std::optional<Vec<U>> augRes = solveAugIp(x.l - z0, x.u - z0);
             if(!augRes) {
                 // No solution was found. We cannot improve our result further;
                 break;
             }
-            assert(x * *augRes == (sVec<U, R + N*S>::Zero()));
+            assert(x * *augRes == (Vec<U>::Zero(R + N*S)));
 
             // The resulting vector has to be an integer solution to the Nfold.
-            sVec<U, N*T> nextCandidate = z0 + *augRes;
+            Vec<U> nextCandidate = z0 + *augRes;
             assert(x * nextCandidate == x.b);
 
             if (U currWeight = nextCandidate.dot(x.c); currWeight > z0.dot(x.c)) {
@@ -76,19 +79,19 @@ public:
 
 private:
 
-    StaticNFold<U, N, R, S, T> x;
+    StaticNFold<U> x;
     SplitTree<U> nodes;
 
     using graphLayer = tsl::hopscotch_map<
-            sVec<U, R + S>,
+            Vec<U>,
             std::pair<U, size_t>,
-            utils::staticVectorHash<U, R + S>,
-            std::equal_to<sVec<U, R + S>>,
-            Eigen::aligned_allocator<std::pair<sVec<U, R + S>, std::pair<U, size_t>>>>;
+            utils::staticVectorHash<U>,
+            std::equal_to<Vec<U>>,
+            Eigen::aligned_allocator<std::pair<Vec<U>, std::pair<U, size_t>>>>;
 
-    std::optional<sVec<U, N*T>> solveAugIp(const sVec<U, N*T> &l, const sVec<U, N*T> &u) {
+    std::optional<Vec<U>> solveAugIp(const Vec<U> &l, const Vec<U> &u) {
         nodes.clear();
-        sVec<U, R + S> zero = sVec<U, R + S>::Zero();
+        Vec<U> zero = Vec<U>::Zero(R + S);
 
         graphLayer curr;
         int startIndex = nodes.add(U(0), SplitTree<U>::NO_PARENT);
@@ -97,7 +100,7 @@ private:
 
         for(int block = 0; block < N; ++block) {
 
-            sMat<U, R + S, T> M;
+            Mat<U> M(R + S, T);
             M << x.as[block], x.bs[block];
 
             for(int col = 0; col < T; ++col) {
@@ -108,7 +111,7 @@ private:
                     auto& [wgt, idx] = wgtAndIdx;
                     int amtFound = 0;
                     for(int y = l(yPos); y <= u(yPos); ++y) {
-                        sVec<U, R + S> candidate = y * M.col(col) + oldPos;
+                        Vec<U> candidate = y * M.col(col) + oldPos;
                         U candidateWeight = wgt + x.c(yPos) * y;
 
                         // In the last step we only want to add elements if they are an possible solution.
@@ -145,7 +148,10 @@ private:
         if(curr.size()) {
             std::vector<U> path = nodes.constructPath(curr[zero].second);
             assert(path.size() == N*T);
-            return sVec<U, N*T>(path.data());
+            Vec<U> res(path.size());
+            for(int i = 0; i < path.size(); ++i)
+                res(i) = path[i];
+            return res;
         } else {
             return std::nullopt;
         }
@@ -157,13 +163,15 @@ private:
 
     // Finds an initial solution to an NFold instance or reports
     // that none exists.
-    static std::optional<sVec<U, N*T>> findInitSol(StaticNFold<U, N, R, S, T>& x) {
+    static std::optional<Vec<U>> findInitSol(StaticNFold<U>& x) {
+        size_t N = x.N, R = x.R, S = x.S, T = x.T;
+
         auto [aInit, initSol] = constructAInit(x);
-        auto [sol, weight] = StaticSolver<U, N, R, S, T + R + S>(aInit).solve(initSol, 0);
+        auto [sol, weight] = StaticSolver<U>(aInit).solve(initSol, 0);
 
         if(!weight) {
             // Solution found.
-            sVec<U, N*T> res(N * T);
+            Vec<U> res(N * T);
             for(int i = 0; i < N; ++i) {
                 res.segment(i * T, T) = sol.segment(i * (T + S + R), T);
             }
@@ -179,9 +187,10 @@ private:
 
     // Constructs an NFold as described by Jansens paper in chapter 4.
     // This is used to find an initial solution for the original input Nfold.
-    static std::pair<StaticNFold<U, N, R, S, T + R + S>, sVec<U, N * (T + R + S)>>
-    constructAInit(const StaticNFold<U, N, R, S, T>& x) {
-        StaticNFold<U, N, R, S, T + R + S> res;
+    static std::pair<StaticNFold<U>, Vec<U>>
+    constructAInit(const StaticNFold<U>& x) {
+        size_t N = x.N, R = x.R, S = x.S, T = x.T;
+        StaticNFold<U> res(N, R, S, T + R + S);
 
         //Construct New matrix
         for(int i = 0; i < N; ++i) {
@@ -225,7 +234,7 @@ private:
         }
 
         // Construct init sol
-        sVec<U, N*(T + R + S)> initSol = sVec<U, N*(T + R + S)>::Zero();
+        Vec<U> initSol = Vec<U>::Zero(N*(T + R + S));
         initSol.segment(T, R) = res.b.segment(0, R);
         for(int i = 0; i < N; ++i) {
             initSol.segment((T + R + S)*i + T + R, S) = res.b.segment(R + i*S, S);
