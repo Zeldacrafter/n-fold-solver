@@ -18,10 +18,10 @@
  */
 
 template <typename U>
-class StaticSolver {
+class n_fold_solver {
 public:
     size_t N, R, S, T;
-    explicit StaticSolver(StaticNFold<U>& _x)
+    explicit n_fold_solver(n_fold<U>& _x)
         : x{_x}, N(_x.N), R(_x.R), S(_x.S), T(_x.T)  {
     }
 
@@ -79,7 +79,7 @@ public:
 
 private:
 
-    StaticNFold<U> x;
+    n_fold<U> x;
     SplitTree<U> nodes;
 
     using graphLayer = tsl::hopscotch_map<
@@ -163,11 +163,11 @@ private:
 
     // Finds an initial solution to an NFold instance or reports
     // that none exists.
-    static std::optional<Vec<U>> findInitSol(StaticNFold<U>& x) {
+    static std::optional<Vec<U>> findInitSol(n_fold<U>& x) {
         size_t N = x.N, R = x.R, S = x.S, T = x.T;
 
         auto [aInit, initSol] = constructAInit(x);
-        auto [sol, weight] = StaticSolver<U>(aInit).solve(initSol, 0);
+        auto [sol, weight] = n_fold_solver<U>(aInit).solve(initSol, 0);
 
         if(!weight) {
             // Solution found.
@@ -187,10 +187,10 @@ private:
 
     // Constructs an NFold as described by Jansens paper in chapter 4.
     // This is used to find an initial solution for the original input Nfold.
-    static std::pair<StaticNFold<U>, Vec<U>>
-    constructAInit(const StaticNFold<U>& x) {
+    static std::pair<n_fold<U>, Vec<U>>
+    constructAInit(const n_fold<U>& x) {
         size_t N = x.N, R = x.R, S = x.S, T = x.T;
-        StaticNFold<U> res(N, R, S, T + R + S);
+        n_fold<U> res(N, R, S, T + R + S);
 
         //Construct New matrix
         for(int i = 0; i < N; ++i) {

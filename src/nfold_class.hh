@@ -7,7 +7,7 @@
 #include "utils.hh"
 
 template<typename U>
-class StaticNFold {
+class n_fold {
 public:
     size_t N, R, S, T;
     Vec<U> l, u, c;
@@ -15,7 +15,7 @@ public:
     std::vector<Mat<U>> as;
     std::vector<Mat<U>> bs;
 
-    StaticNFold(size_t n, size_t r, size_t s, size_t t) :
+    n_fold(size_t n, size_t r, size_t s, size_t t) :
         N{n}, R{r}, S{s}, T{t},
         l(N*T), u(N*T), c(N*T), b(R + N*S),
         as(N, Mat<U>(R, T)), bs(N, Mat<U>(S, T)) {};
@@ -47,7 +47,7 @@ public:
         return res;
     }
 
-    friend std::ostream& operator<<(std::ostream& outp, StaticNFold<U> x) {
+    friend std::ostream& operator<<(std::ostream& outp, n_fold<U> x) {
         outp << "n: " << x.N << ", r: " << x.R << ", s: " << x.S << ", t: " << x.T << std::endl
              << "l: " << x.l << std::endl
              << "u: " << x.u << std::endl
@@ -63,7 +63,7 @@ public:
         return outp;
     }
 
-    friend std::istream& operator>>(std::istream& inp, StaticNFold<U>& x) {
+    friend std::istream& operator>>(std::istream& inp, n_fold<U>& x) {
         inp >> x.l >> x.u >> x.b >> x.c;
         for(int i = 0; i < x.as.size(); ++i) {
             inp >> x.as[i];
