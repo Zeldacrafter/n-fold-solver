@@ -40,10 +40,10 @@ class prefix_tree {
         }
     }
 
-    void remove(size_t index) {
+    void remove(size_t index, bool removeParents = true) {
         assert(tree.size() > index);
         freeIndices.push_back(index);
-        if(tree[index].parentIdx != NO_PARENT) {
+        if(tree[index].parentIdx != NO_PARENT && removeParents) {
             int parIdx = tree[index].parentIdx;
             if(--tree[parIdx].childrenCnt == 0) {
                 remove(parIdx);

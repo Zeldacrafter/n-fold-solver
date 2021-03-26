@@ -120,7 +120,7 @@ private:
                                     ptr == next.end() || ptr->second.first < candidateWeight) {
                                 if (ptr != next.end()) {
                                     // We already have an element at that position.
-                                    nodes.remove(ptr->second.second);
+                                    nodes.remove(ptr->second.second, false);
                                 }
                                 int insertionIndex = nodes.add(y, idx);
                                 next[candidate] = std::make_pair(candidateWeight, insertionIndex);
