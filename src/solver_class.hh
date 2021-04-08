@@ -12,11 +12,63 @@
 #include "nfold_class.hh"
 #include "prefix_tree_class.hh"
 
-template <typename U, int N, int R, int S, int T>
+/**
+ * Class which solves the n-fold ILP to a corresponding n-fold.
+ * @tparam U The type of the nfold entries.
+ * @tparam N Size parameter for the corresponding nfold.
+ * @tparam R Size parameter for the corresponding nfold.
+ * @tparam S Size parameter for the corresponding nfold.
+ * @tparam T Size parameter for the corresponding nfold.
+ * @tparam IGNORE_L_A Specified whether the bound L_A should be ignored.
+ *      This may be a significant performance boost to performance if L_A
+ *      is far larger than the largest entry in the bounds of the nfold
+ *      but represents a performance penalty if this is not the case.
+ */
+template <int N, int R, int S, int T, typename U = int, bool IGNORE_L_A = true>
 class n_fold_solver {
-public:
-    explicit n_fold_solver(n_fold<U, N, R, S, T>& _x) : x{_x} { }
+  public:
+    unsigned long long L_A = 0;
+    bool ignoreL_A;
+    explicit n_fold_solver(n_fold<N, R, S, T, U>& _x) : x{_x}, ignoreL_A{IGNORE_L_A} {
+        if(ignoreL_A) {
+            L_A = std::numeric_limits<unsigned long long>::max();
+            return;
+        }
 
+        // Try to calculate the value of L_A.
+        // If an overflow occurs we just ignore it
+        // for the remainder of the algorithm.
+        bool overflow = false;
+
+        unsigned long long delta = x.getDelta();
+        unsigned long long L_B = 1;
+        unsigned long long base = 2*R*delta + 1;
+        for(int i = 0; i < S; ++i) {
+            overflow |= __builtin_umulll_overflow(L_B, base, &L_B);
+        }
+
+        overflow |= __builtin_umulll_overflow(L_B, 2*R*delta, &base);
+        ++base;
+        L_A = 1;
+        for(int i = 0; i < R; ++i) {
+            overflow |= __builtin_umulll_overflow(L_A, base, &L_A);
+        }
+
+        overflow |= __builtin_umulll_overflow(L_A, L_B, &L_A);
+
+        overflow |= __builtin_umulll_overflow(L_A, delta, &L_A);
+        if(overflow) {
+            // L_A is too big. Just ignore it.
+            ignoreL_A = true;
+            L_A = std::numeric_limits<unsigned long long>::max();
+        }
+    }
+
+    /**
+     * Solves the to this solver corresponding n-fold ILP.
+     * @return If a solution exists a pair with the solution vector and its cost is returned.
+     *         If no solution exists std::nullopt is returned.
+     */
     std::optional<std::pair<sVec<U, N*T>, U>> solve() {
         std::optional<sVec<U, N*T>> initSolution = findInitSol(x);
         if (initSolution) {
@@ -27,6 +79,14 @@ public:
         }
     }
 
+    /**
+     * Solves the to the n-fold corresponding ILP assuming that an initial solution is known.
+     * @param initSolution The initial solution to the n-fold.
+     * @param knownBest Optional parameter for a heuristic.
+     *        If it is known that there can be no cost better than knownBest we can prematurely terminate
+     *        once that cost is reached.
+     * @return A pair with the solution vector and tis cost.
+     */
     std::pair<sVec<U, N*T>, U> solve(const sVec<U, N*T> &initSolution,
                                      const std::optional<U> knownBest = std::nullopt) {
         assert(x * initSolution == x.b);
@@ -37,43 +97,65 @@ public:
         for (bool changed = true; changed;) {
             changed = false;
 
-            // After ever augmentation step we should have Ay = 0 for the result of the augmentation step.
-            // This means that we still have A(z0 + y) = b.
-            //sVec<U, N*T> augRes = solveAugIp(x.l - z0, x.u - z0, startLayer);
-            std::optional<sVec<U, N*T>> augRes = solveAugIp(x.l - z0, x.u - z0);
-            if(!augRes) {
-                // No solution was found. We cannot improve our result further;
-                break;
-            }
-            assert(x * *augRes == (sVec<U, R + N*S>::Zero()));
+            U gamma = (x.u - x.l).maxCoeff();
+            U maxIters = !ignoreL_A ? ceil(log2(gamma)) + 1 : 0; // TODO: Cleanup
+            for(int i = 0; i <= maxIters; ++i) {
+                U lambda = 1 << i;
 
-            // The resulting vector has to be an integer solution to the Nfold.
-            sVec<U, N*T> nextCandidate = z0 + *augRes;
-            assert(x * nextCandidate == x.b);
+                sVec<U, N*T> newL = ((x.l - z0).array() + lambda - 1) / lambda;
+                sVec<U, N*T> newU = (x.u - z0).array() / lambda;
+                if(!ignoreL_A) {
+                    newL = newL.array().max(-L_A);
+                    newU = newU.array().min(L_A);
+                }
 
-            if (U currWeight = nextCandidate.dot(x.c); currWeight > z0.dot(x.c)) {
-                z0 = nextCandidate;
-                changed = true;
-
-                // Heuristic:
-                // If we know what our optimal solution is and we are simply
-                // concerned with finding one/determining if one exists we can return preemptively.
-                // This is the case for finding an initial solution
-                // and cuts down on execution time by quite a bit.
-                if (knownBest && *knownBest == currWeight) {
+                // After ever augmentation step we should have Ay = 0 for the result of the augmentation step.
+                // This means that we still have A(z0 + y) = b.
+                std::optional<sVec<U, N*T>> augRes = solveAugIp(newL, newU);
+                if(!augRes) {
+                    // No solution was found. We cannot improve our result further;
                     break;
                 }
+                assert(x * *augRes == (sVec<U, R + N*S>::Zero()));
+
+                // The resulting vector has to be an integer solution to the Nfold.
+                sVec<U, N*T> nextCandidate = z0 + *augRes;
+                assert(x * nextCandidate == x.b);
+
+                if (U currWeight = nextCandidate.dot(x.c); currWeight > z0.dot(x.c)) {
+                    z0 = nextCandidate;
+                    changed = true;
+
+                    // Heuristic:
+                    // If we know what our optimal solution is and we are simply
+                    // concerned with finding one/determining if one exists we can return preemptively.
+                    // This is the case for finding an initial solution
+                    // and cuts down on execution time by quite a bit.
+                    if (knownBest && *knownBest == currWeight) {
+                        break;
+                    }
+                }
+
             }
+
+
         }
 
         return std::make_pair(z0, z0.dot(x.c));
     }
 
-private:
+  private:
 
-    n_fold<U, N, R, S, T> x;
+    /** The n-fold for which we want to solve the corresponding ILP. */
+    n_fold<N, R, S, T, U> x;
+
+    /** Data structure for efficiently holding needed information about the generated graph. */
     prefix_tree<U> nodes;
 
+    /**
+     * Datatype that represents a layer in the corresponding graph.
+     * Each node maps to a corresponding weight and a position in nodes.
+     */
     using graphLayer = tsl::hopscotch_map<
             sVec<U, R + S>,
             std::pair<U, size_t>,
@@ -81,6 +163,12 @@ private:
             std::equal_to<sVec<U, R + S>>,
             Eigen::aligned_allocator<std::pair<sVec<U, R + S>, std::pair<U, size_t>>>>;
 
+    /**
+     * Do one augmentation step on the current solution.
+     * @param l The lower bound on the augmenting vector.
+     * @param u The upper bound on the augmenting vector.
+     * @return The augmenting vector if one exists and std::nullopt otherwise.
+     */
     std::optional<sVec<U, N*T>> solveAugIp(const sVec<U, N*T> &l, const sVec<U, N*T> &u) {
         nodes.clear();
         sVec<U, R + S> zero = sVec<U, R + S>::Zero();
@@ -105,6 +193,11 @@ private:
                     for(int y = l(yPos); y <= u(yPos); ++y) {
                         sVec<U, R + S> candidate = y * M.col(col) + oldPos;
                         U candidateWeight = wgt + x.c(yPos) * y;
+
+                        if(!ignoreL_A && candidate.maxCoeff() > L_A) {
+                            // We can skip this element as it exceeds delta*L_A;
+                            continue;
+                        }
 
                         // In the last step we only want to add elements if they are an possible solution.
                         // This means that they need to solve the corresponding B block fully (last s elements are 0)
@@ -152,9 +245,14 @@ private:
 
     // Finds an initial solution to an NFold instance or reports
     // that none exists.
-    static std::optional<sVec<U, N*T>> findInitSol(n_fold<U, N, R, S, T>& x) {
+    /**
+     * Find an initial solution to the to an n-fold corresponding ILP.
+     * @param x The n-fold.
+     * @return An initial solution if one exists or std::nullopt otherwise.
+     */
+    static std::optional<sVec<U, N*T>> findInitSol(const n_fold<N, R, S, T, U>& x) {
         auto [aInit, initSol] = constructAInit(x);
-        auto [sol, weight] = n_fold_solver<U, N, R, S, T + R + S>(aInit).solve(initSol, 0);
+        auto [sol, weight] = n_fold_solver<N, R, S, T + R + S, U>(aInit).solve(initSol, 0);
 
         if(!weight) {
             // Solution found.
@@ -172,11 +270,15 @@ private:
         }
     }
 
-    // Constructs an NFold as described by Jansens paper in chapter 4.
-    // This is used to find an initial solution for the original input Nfold.
-    static std::pair<n_fold<U, N, R, S, T + R + S>, sVec<U, N * (T + R + S)>>
-    constructAInit(const n_fold<U, N, R, S, T>& x) {
-        n_fold<U, N, R, S, T + R + S> res;
+    /**
+     * Given a n-fold, constructs a second n-fold with a known initial solution where the optimal solution
+     * is a solution to the inital n-fold.
+     * @param x The initial n-fold.
+     * @return A pair, containing the constructed n-fold and its initial solution.
+     */
+    static std::pair<n_fold<N, R, S, T + R + S, U>, sVec<U, N * (T + R + S)>>
+    constructAInit(const n_fold<N, R, S, T, U>& x) {
+        n_fold<N, R, S, T + R + S, U> res;
 
         //Construct New matrix
         for(int i = 0; i < N; ++i) {

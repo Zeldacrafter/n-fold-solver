@@ -6,7 +6,7 @@
 
 #include "utils.hh"
 
-template<typename U, int N, int R, int S, int T>
+template<int N, int R, int S, int T, typename U = int>
 class n_fold {
 public:
     sVec<U, N*T> l, u, c;
@@ -16,7 +16,27 @@ public:
 
     n_fold() = default;
 
-    // Function call operator accesses the matrix element in that position.
+    /**
+     * Return the largest entry in the matrix.
+     * @return The largest entry in the matrix.
+     */
+    U getDelta() {
+        U delta = std::numeric_limits<U>::min();
+        for(auto& x : as) {
+            delta = std::max(delta, x.maxCoeff());
+        }
+        for(auto& x : bs) {
+            delta = std::max(delta, x.maxCoeff());
+        }
+        return delta;
+    }
+
+    /**
+     * Access the element at a position in that matrix.
+     * @param row The row of the wanted entry.
+     * @param col The column of the wanted entry.
+     * @return The value of the wanted entry.
+     */
     U operator()(size_t row, size_t col) {
         assert(row < R + N*S);
         assert(col < N*T);
@@ -33,7 +53,11 @@ public:
         }
     }
 
-    // multiplication with a column vector
+    /**
+     * Multiplication of a vector with a column vector.
+     * @param x The column vector.
+     * @return The result of the multiplication.
+     */
     sVec<U, R + N*S> operator*(const sVec<U, N*T>& x) const {
         sVec<U, R + N*S> res = sVec<U, R + N*S>::Zero();
         for(int i = 0; i < N; ++i) {
@@ -43,7 +67,7 @@ public:
         return res;
     }
 
-    friend std::ostream& operator<<(std::ostream& outp, n_fold<U, N, R, S, T> x) {
+    friend std::ostream& operator<<(std::ostream& outp, n_fold<N, R, S, T, U> x) {
         outp << "n: " << N << ", r: " << R << ", s: " << S << ", t: " << T << std::endl
              << "l: " << x.l << std::endl
              << "u: " << x.u << std::endl
@@ -59,7 +83,7 @@ public:
         return outp;
     }
 
-    friend std::istream& operator>>(std::istream& inp, n_fold<U, N, R, S, T>& x) {
+    friend std::istream& operator>>(std::istream& inp, n_fold<N, R, S, T, U>& x) {
         inp >> x.l >> x.u >> x.b >> x.c;
         for(int i = 0; i < x.as.size(); ++i) {
             inp >> x.as[i];

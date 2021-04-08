@@ -33,10 +33,10 @@ int main() {
     assert(S_NFOLD == s);
     assert(T_NFOLD == t);
 
-    n_fold<int, N_NFOLD, R_NFOLD, S_NFOLD, T_NFOLD> nfold;
+    n_fold<N_NFOLD, R_NFOLD, S_NFOLD, T_NFOLD> nfold;
     cin >> nfold;
 
-    auto maybeRes = n_fold_solver<int, N_NFOLD, R_NFOLD, S_NFOLD, T_NFOLD>(nfold).solve();
+    auto maybeRes = n_fold_solver<N_NFOLD, R_NFOLD, S_NFOLD, T_NFOLD>(nfold).solve();
     if(maybeRes) {
         cout << (*maybeRes).second << std::endl << (*maybeRes).first;
     } else {
