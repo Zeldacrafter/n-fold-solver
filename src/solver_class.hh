@@ -5,7 +5,7 @@
 #include <stack>
 #pragma GCC diagnostic push // Ignore shadow warnings in external library.
 #pragma GCC diagnostic ignored "-Wshadow"
-#include "../third-party/hopscotch-map/include/tsl/hopscotch_map.h"
+#include <tsl/hopscotch_map.h>
 #pragma GCC diagnostic pop
 
 #include "utils.hh"
@@ -24,12 +24,12 @@
  *      is far larger than the largest entry in the bounds of the nfold
  *      but represents a performance penalty if this is not the case.
  */
-template <int N, int R, int S, int T, typename U = int, bool IGNORE_L_A = true>
+template <int N, int R, int S, int T, typename U = int, bool IGNORE_L_A = false>
 class n_fold_solver {
   public:
-    unsigned long long L_A = 0;
-    bool ignoreL_A;
-    explicit n_fold_solver(n_fold<N, R, S, T, U>& _x) : x{_x}, ignoreL_A{IGNORE_L_A} {
+    explicit n_fold_solver(n_fold<N, R, S, T, U>& _x) : ignoreL_A{IGNORE_L_A}, x{_x}  {
+        delta = x.getDelta();
+
         if(ignoreL_A) {
             L_A = std::numeric_limits<unsigned long long>::max();
             return;
@@ -40,9 +40,8 @@ class n_fold_solver {
         // for the remainder of the algorithm.
         bool overflow = false;
 
-        unsigned long long delta = x.getDelta();
         unsigned long long L_B = 1;
-        unsigned long long base = 2*R*delta + 1;
+        unsigned long long base = 2*S*delta + 1;
         for(int i = 0; i < S; ++i) {
             overflow |= __builtin_umulll_overflow(L_B, base, &L_B);
         }
@@ -56,7 +55,9 @@ class n_fold_solver {
 
         overflow |= __builtin_umulll_overflow(L_A, L_B, &L_A);
 
-        overflow |= __builtin_umulll_overflow(L_A, delta, &L_A);
+        // also check if delta*L_A is too big as we need it as bound lateron.
+        overflow |= __builtin_umulll_overflow(L_A, delta, &base);
+
         if(overflow) {
             // L_A is too big. Just ignore it.
             ignoreL_A = true;
@@ -109,11 +110,11 @@ class n_fold_solver {
                     newU = newU.array().min(L_A);
                 }
 
-                // After ever augmentation step we should have Ay = 0 for the result of the augmentation step.
-                // This means that we still have A(z0 + y) = b.
+                // After ever augmentation step we should have A * augRes = 0 for the result of the augmentation step.
+                // This means that we still have A(z0 + augRes) = b.
                 std::optional<sVec<U, N*T>> augRes = solveAugIp(newL, newU);
                 if(!augRes) {
-                    // No solution was found. We cannot improve our result further;
+                    // No solution was found. We cannot improve our result further.
                     break;
                 }
                 assert(x * *augRes == (sVec<U, R + N*S>::Zero()));
@@ -135,16 +136,16 @@ class n_fold_solver {
                         break;
                     }
                 }
-
             }
-
-
         }
 
         return std::make_pair(z0, z0.dot(x.c));
     }
 
-  private:
+private:
+    unsigned long long L_A = 0;
+    unsigned long long delta;
+    bool ignoreL_A;
 
     /** The n-fold for which we want to solve the corresponding ILP. */
     n_fold<N, R, S, T, U> x;
@@ -159,9 +160,9 @@ class n_fold_solver {
     using graphLayer = tsl::hopscotch_map<
             sVec<U, R + S>,
             std::pair<U, size_t>,
-            utils::staticVectorHash<U, R + S>,
-            std::equal_to<sVec<U, R + S>>,
-            Eigen::aligned_allocator<std::pair<sVec<U, R + S>, std::pair<U, size_t>>>>;
+    utils::staticVectorHash<U, R + S>,
+    std::equal_to<sVec<U, R + S>>,
+    Eigen::aligned_allocator<std::pair<sVec<U, R + S>, std::pair<U, size_t>>>>;
 
     /**
      * Do one augmentation step on the current solution.
@@ -194,7 +195,7 @@ class n_fold_solver {
                         sVec<U, R + S> candidate = y * M.col(col) + oldPos;
                         U candidateWeight = wgt + x.c(yPos) * y;
 
-                        if(!ignoreL_A && candidate.maxCoeff() > L_A) {
+                        if(!ignoreL_A && static_cast<unsigned long long>(candidate.maxCoeff()) > delta*L_A) {
                             // We can skip this element as it exceeds delta*L_A;
                             continue;
                         }
@@ -239,12 +240,6 @@ class n_fold_solver {
         }
     }
 
-    /////////////////////////////
-    /// Find Initial Solution ///
-    /////////////////////////////
-
-    // Finds an initial solution to an NFold instance or reports
-    // that none exists.
     /**
      * Find an initial solution to the to an n-fold corresponding ILP.
      * @param x The n-fold.
@@ -280,7 +275,7 @@ class n_fold_solver {
     constructAInit(const n_fold<N, R, S, T, U>& x) {
         n_fold<N, R, S, T + R + S, U> res;
 
-        //Construct New matrix
+        //Construct new matrix
         for(int i = 0; i < N; ++i) {
             res.as[i].block(0, 0, R, T) = x.as[i];
             if(!i) {
@@ -295,7 +290,7 @@ class n_fold_solver {
             res.bs[i].block(0, T + R, S, S).setIdentity();
         }
 
-        // Construct New righthand side
+        // Construct new righthand side
         res.b = x.b - x*x.l;
 
         // Construct upper and lower bound
@@ -321,7 +316,7 @@ class n_fold_solver {
             }
         }
 
-        // Construct init sol
+        // Construct initial solution
         sVec<U, N*(T + R + S)> initSol = sVec<U, N*(T + R + S)>::Zero();
         initSol.segment(T, R) = res.b.segment(0, R);
         for(int i = 0; i < N; ++i) {

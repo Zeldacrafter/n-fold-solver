@@ -1,29 +1,13 @@
-#ifdef USING_BOOST
-#include <signal.h>
-#include <boost/stacktrace.hpp>
-#endif
-
 #include <Eigen/Dense>
 
 #include "utils.hh"
 #include "solver_class.hh"
 
-#ifdef USING_BOOST
-void handler(int) {
-    std::cerr << boost::stacktrace::stacktrace() << std::endl;
-    _exit(1);
-}
-#endif
-
 int main() {
 #if not defined(N_NFOLD) || not defined(R_NFOLD) || not defined(S_NFOLD) || not defined(T_NFOLD)
     std::cout << "Variables N_NFOLD, R_NFOLD, S_NFOLD and T_NFOLD must be set at compile-time." << std::endl;
-    exit(1);
+    return 1;
 #else
-#ifdef USING_BOOST
-    ::signal(SIGABRT, handler);
-    ::signal(SIGSEGV, handler);
-#endif
     using namespace std;
 
     int n, r, s, t;

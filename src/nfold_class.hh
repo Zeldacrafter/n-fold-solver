@@ -6,6 +6,14 @@
 
 #include "utils.hh"
 
+/**
+ * Class that represents an n-fold ILP instance.
+ * @tparam N Size parameter for the n-fold.
+ * @tparam R Size parameter for the n-fold.
+ * @tparam S Size parameter for the n-fold.
+ * @tparam T Size parameter for the n-fold.
+ * @tparam U Value type in the n-fold.
+ */
 template<int N, int R, int S, int T, typename U = int>
 class n_fold {
 public:
@@ -23,10 +31,10 @@ public:
     U getDelta() {
         U delta = std::numeric_limits<U>::min();
         for(auto& x : as) {
-            delta = std::max(delta, x.maxCoeff());
+            delta = std::max(delta, x.template lpNorm<Eigen::Infinity>());
         }
         for(auto& x : bs) {
-            delta = std::max(delta, x.maxCoeff());
+            delta = std::max(delta, x.template lpNorm<Eigen::Infinity>());
         }
         return delta;
     }
@@ -85,11 +93,11 @@ public:
 
     friend std::istream& operator>>(std::istream& inp, n_fold<N, R, S, T, U>& x) {
         inp >> x.l >> x.u >> x.b >> x.c;
-        for(int i = 0; i < x.as.size(); ++i) {
-            inp >> x.as[i];
+        for(auto& mat : x.as) {
+            inp >> mat;
         }
-        for(int i = 0; i < x.bs.size(); ++i) {
-            inp >> x.bs[i];
+        for(auto& mat : x.bs) {
+            inp >> mat;
         }
         return inp;
     }
