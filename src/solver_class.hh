@@ -24,7 +24,7 @@
  *      is far larger than the largest entry in the bounds of the nfold
  *      but represents a performance penalty if this is not the case.
  */
-template <int N, int R, int S, int T, typename U = int, bool IGNORE_L_A = false>
+template <int N, int R, int S, int T, typename U = int, bool IGNORE_L_A = true>
 class n_fold_solver {
   public:
     explicit n_fold_solver(n_fold<N, R, S, T, U>& _x) : ignoreL_A{IGNORE_L_A}, x{_x}  {
@@ -73,7 +73,7 @@ class n_fold_solver {
     std::optional<std::pair<sVec<U, N*T>, U>> solve() {
         std::optional<sVec<U, N*T>> initSolution = findInitSol(x);
         if (initSolution) {
-            assert(x * *initSolution == x.b);
+            assertm(x * *initSolution == x.b, "The initial solution is not a solution to the n-fold ILP.");
             return std::optional(solve(*initSolution));
         } else {
             return std::nullopt;
@@ -90,7 +90,7 @@ class n_fold_solver {
      */
     std::pair<sVec<U, N*T>, U> solve(const sVec<U, N*T> &initSolution,
                                      const std::optional<U> knownBest = std::nullopt) {
-        assert(x * initSolution == x.b);
+        assertm(x * initSolution == x.b, "The provided initial solution is not a solution to the n-fold ILP.");
 
         sVec<U, N*T> z0 = initSolution;
         // As long as a better solution eSts it is guaranteed that we find one.
@@ -117,11 +117,13 @@ class n_fold_solver {
                     // No solution was found. We cannot improve our result further.
                     break;
                 }
-                assert(x * *augRes == (sVec<U, R + N*S>::Zero()));
+                assertm(x * *augRes == (sVec<U, R + N*S>::Zero()),
+                        "The augmentation step does not produce a correct augmenting vector.");
 
                 // The resulting vector has to be an integer solution to the Nfold.
                 sVec<U, N*T> nextCandidate = z0 + *augRes;
-                assert(x * nextCandidate == x.b);
+                assertm(x * nextCandidate == x.b,
+                       "The candidate does not produce the correct result.");
 
                 if (U currWeight = nextCandidate.dot(x.c); currWeight > z0.dot(x.c)) {
                     z0 = nextCandidate;
@@ -176,7 +178,7 @@ private:
 
         graphLayer curr;
         int startIndex = nodes.add(U(0), prefix_tree<U>::NO_PARENT);
-        assert(startIndex == 0);
+        assertm(startIndex == 0, "The tree was not cleared before the augmentation step.");
         curr[zero] = std::make_pair(U(0), startIndex);
 
         for(int block = 0; block < N; ++block) {
@@ -233,7 +235,7 @@ private:
 
         if(curr.size()) {
             std::vector<U> path = nodes.constructPath(curr[zero].second);
-            assert(path.size() == N*T);
+            assertm(path.size() == N*T, "The augmenting vector does not have the correct length.");
             return sVec<U, N*T>(path.data());
         } else {
             return std::nullopt;
@@ -257,7 +259,7 @@ private:
             }
             res = res + x.l; // The constructed solution is offset by l. We Need to adjust for that here.
 
-            assert(x * res == x.b);
+            assertm(x * res == x.b, "The initial solution produces the wrong value.");
             return res;
         } else {
             // No solution exists.

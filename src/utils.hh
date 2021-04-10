@@ -5,6 +5,8 @@
 #include <boost/container_hash/hash.hpp>
 #include <Eigen/Dense>
 
+#define assertm(exp, msg) assert(((void)msg, exp))
+
 ///////////////////////////////////////////////
 /// Typedefs for Eigen matrices and vectors ///
 ///////////////////////////////////////////////

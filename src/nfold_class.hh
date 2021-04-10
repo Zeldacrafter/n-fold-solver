@@ -46,8 +46,8 @@ public:
      * @return The value of the wanted entry.
      */
     U operator()(size_t row, size_t col) {
-        assert(row < R + N*S);
-        assert(col < N*T);
+        assertm(row >= 0 && row < R + N*S, "The specified row of the n-fold is invalid.");
+        assertm(col >= 0 && col < N*T, "The specified column of the n-fold is invalid.");
 
         if(row < R) {
             return as[col/T](row, col%T); // A block

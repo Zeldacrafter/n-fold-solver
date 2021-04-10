@@ -13,10 +13,10 @@ template <typename U>
 class prefix_tree {
   private:
     struct Node {
-      public:
         U val;
         size_t parentIdx;
         int childrenCnt;
+        bool markedUnused = false;
 
         Node(U _val, size_t pIdx) : val{_val}, parentIdx{pIdx}, childrenCnt{U(0)} {}
     };
@@ -34,7 +34,7 @@ class prefix_tree {
      * @return The index of the addes element.
      */
     int add(U value, size_t parInd) {
-        assert(tree.size() > parInd || parInd == NO_PARENT);
+        assertm(tree.size() > parInd || parInd == NO_PARENT, "The provided parent index is invalid.");
 
         if(parInd != NO_PARENT) {
             tree[parInd].childrenCnt++;
@@ -59,8 +59,12 @@ class prefix_tree {
      *                      remove operation.
      */
     void remove(size_t index, bool removeParents = true) {
-        assert(tree.size() > index);
+        assertm(tree.size() > index, "The index to remove does not exist.");
+
+        if(tree[index].markedUnused) return; // This node is already marked as removed.
+
         freeIndices.push_back(index);
+        tree[index].markedUnused = true;
         if(tree[index].parentIdx != NO_PARENT) {
             int parIdx = tree[index].parentIdx;
             if(--tree[parIdx].childrenCnt == 0 && removeParents) {
@@ -75,7 +79,7 @@ class prefix_tree {
      * @return Vector of values on that path.
      */
     std::vector<U> constructPath(size_t index) {
-        assert(index < tree.size());
+        assertm(index < tree.size(), "The index to construct the path to does not exist.");
 
         std::vector<U> res;
         while(tree[index].parentIdx != NO_PARENT) {
